@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── PromptHub Design Tokens ─── */
+/* ─── PromptHub Design Tokens (Dark Theme) ─── */
 :root {
   --bg: #0a0a0f;
   --surface: #13131a;
@@ -25,6 +25,27 @@
   --purple: #c472d8;
   --purple-dim: rgba(196, 114, 216, 0.12);
   --radius: 0.625rem;
+
+  /* Map to Tailwind v4 internal tokens if needed, but we'll use our own mostly */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --primary-foreground: #fff;
+  --secondary: var(--surface2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface2);
+  --muted-foreground: var(--text-muted);
+  --accent-bg: var(--accent-dim);
+  --accent-foreground: var(--accent);
+  --destructive: var(--red);
+  --destructive-foreground: #fff;
+  --border-color: var(--border);
+  --input-bg: var(--surface);
+  --ring-color: var(--accent-border);
 }
 
 * {
@@ -35,6 +56,7 @@
 
 html {
   color-scheme: dark;
+  background: var(--bg);
 }
 
 body {
@@ -66,7 +88,7 @@ body {
   animation: pgIn 0.2s ease;
 }
 
-/* ── Utility classes matching HTML design ── */
+/* ── Utility classes ── */
 .ph-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -80,7 +102,7 @@ body {
 .ph-card:hover {
   border-color: var(--accent-border);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
 }
 
 .btn-primary {
@@ -89,17 +111,18 @@ body {
   color: #fff;
   font-size: 13px;
   font-weight: 600;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  letter-spacing: -0.2px;
   transition: opacity 0.15s;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
 }
 .btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-ghost {
   background: none;
@@ -107,31 +130,33 @@ body {
   color: var(--text-dim);
   font-size: 13px;
   font-weight: 500;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
 }
 .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
 
 .btn-secondary {
-  background: var(--surface);
+  background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 13px;
   font-weight: 500;
-  padding: 9px 18px;
+  padding: 9px 20px;
   border-radius: 9px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 .btn-secondary:hover { border-color: var(--border-hover); color: var(--text); }
 
@@ -141,14 +166,11 @@ body {
   color: var(--red);
   font-size: 13px;
   font-weight: 500;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 .btn-danger:hover { opacity: 0.8; }
 
@@ -157,7 +179,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 11px 14px;
+  padding: 12px 14px;
   color: var(--text);
   font-size: 13px;
   font-family: inherit;
@@ -172,7 +194,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 14px;
   color: var(--text);
   font-size: 13px;
   font-family: inherit;
@@ -183,7 +205,6 @@ body {
   line-height: 1.6;
 }
 .form-textarea:focus { border-color: var(--accent-border); }
-.form-textarea::placeholder { color: var(--text-muted); }
 
 .form-select {
   width: 100%;
@@ -210,7 +231,6 @@ body {
   border-radius: 5px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.3px;
 }
 .badge-public { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
 .badge-private { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
