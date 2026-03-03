@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthContext";
-import Nav from "@/components/layout/Nav";
 
 export const metadata: Metadata = {
   title: "PromptHub — 검증된 프롬프트를 찾고, Fork하고, 발전시키세요",
@@ -23,7 +22,6 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <Nav />
           {children}
         </AuthProvider>
       </body>
