@@ -10,8 +10,8 @@ export default defineConfig({
   schema: "./src/lib/db/schema.ts",
   dialect: "postgresql",
   migrations: {
-    table: "__drizzle_migrations_my-next-app",
-    schema: "my-next-app-schema",
+    table: "__drizzle_migrations_promptHub",
+    schema: "promptHub",
   },
 
   dbCredentials: {

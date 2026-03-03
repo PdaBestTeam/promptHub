@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
-  check,
   index,
   integer,
   pgSchema,
@@ -9,42 +8,22 @@ import {
   serial,
   text,
   timestamp,
-  uuid,
   varchar,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
-const appSchema = pgSchema("my-next-app");
+const appSchema = pgSchema("promptHub");
 
-export const sampleTable = appSchema.table(
-  "sample_table",
-  {
-    // 많이 사용하는 id타입 (1) uuid - defaultRandom: uuidv4
-    id: uuid("id").defaultRandom().primaryKey(),
-    // 많이 사용하는 id타입 (2) serial (integer-autoIncrement)
-    sampleId: serial("sample_id"),
-    title: varchar("title", { length: 255 }).notNull(),
-    username: varchar("username", { length: 20 }).unique().notNull(),
-    content: text("content"),
-    age: integer("age"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date()),
-    isDeleted: boolean("is_deleted").default(false),
-  },
-  (table) => [
-    // 체크 제약조건
-    check("sample_age_check1", sql`${table.age} > 20`),
-    index("sample_idx_title").on(table.title),
-  ],
-);
+// ══════════════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════════════
 export const usersTable = appSchema.table("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   nickname: varchar("nickname", { length: 80 }).notNull(),
   role: varchar("role", { length: 20 }).notNull().default("user"),
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -52,86 +31,102 @@ export const usersTable = appSchema.table("users", {
     .notNull(),
 });
 
-export const postsTable = appSchema.table("posts", {
+// ══════════════════════════════════════════════════════
+// CATEGORIES  (4 fixed: 일러스트, 개발, 고민해결, 여행)
+// ══════════════════════════════════════════════════════
+export const categoriesTable = appSchema.table("categories", {
   id: serial("id").primaryKey(),
-  authorId: uuid("author_id")
-    .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  title: varchar("title", { length: 200 }).notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
 });
 
-export const postLikesTable = appSchema.table(
-  "post_likes",
+// ══════════════════════════════════════════════════════
+// PROMPTS
+// ══════════════════════════════════════════════════════
+export const promptsTable = appSchema.table(
+  "prompts",
   {
-    userId: uuid("user_id")
+    id: serial("id").primaryKey(),
+    authorId: integer("author_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
-    postId: integer("post_id")
+    categoryId: integer("category_id").references(() => categoriesTable.id, {
+      onDelete: "set null",
+    }),
+    title: varchar("title", { length: 300 }).notNull(),
+    content: text("content").notNull(),
+    description: text("description"),
+    isPublic: boolean("is_public").notNull().default(true),
+    // Fork relations
+    parentPromptId: integer("parent_prompt_id").references(
+      (): AnyPgColumn => promptsTable.id,
+      { onDelete: "set null" }
+    ),
+    forkedFromVersionId: integer("forked_from_version_id"),
+    // Version tracking
+    currentVersionNo: integer("current_version_no").notNull().default(1),
+    // Stats (denormalized for perf)
+    viewCount: integer("view_count").notNull().default(0),
+    scrapCount: integer("scrap_count").notNull().default(0),
+    forkCount: integer("fork_count").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("prompts_author_id_idx").on(table.authorId),
+    index("prompts_category_id_idx").on(table.categoryId),
+    index("prompts_created_at_idx").on(table.createdAt),
+    index("prompts_title_idx").on(table.title),
+  ]
+);
+
+// ══════════════════════════════════════════════════════
+// PROMPT_VERSIONS
+// ══════════════════════════════════════════════════════
+export const promptVersionsTable = appSchema.table(
+  "prompt_versions",
+  {
+    id: serial("id").primaryKey(),
+    promptId: integer("prompt_id")
       .notNull()
-      .references(() => postsTable.id, { onDelete: "cascade" }),
+      .references(() => promptsTable.id, { onDelete: "cascade" }),
+    versionNo: integer("version_no").notNull(),
+    title: varchar("title", { length: 300 }).notNull(),
+    content: text("content").notNull(),
+    changeNote: text("change_note"),
+    editedBy: integer("edited_by")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("prompt_versions_prompt_id_idx").on(table.promptId),
+  ]
+);
+
+// ══════════════════════════════════════════════════════
+// SCRAPS
+// ══════════════════════════════════════════════════════
+export const scrapsTable = appSchema.table(
+  "scraps",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    promptId: integer("prompt_id")
+      .notNull()
+      .references(() => promptsTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     primaryKey({
-      columns: [table.userId, table.postId],
-      name: "post_likes_pk",
+      columns: [table.userId, table.promptId],
+      name: "scraps_pk",
     }),
-    index("post_likes_post_id_index").on(table.postId),
-  ],
+    index("scraps_user_id_idx").on(table.userId),
+    index("scraps_prompt_id_idx").on(table.promptId),
+  ]
 );
-
-export const postCommentsTable = appSchema.table("post_comments", {
-  id: serial("id").primaryKey(),
-  postId: integer("post_id").references(() => postsTable.id, {
-    onDelete: "set null",
-  }),
-  parentId: integer("parent_id").references(
-    (): AnyPgColumn => postCommentsTable.id,
-    { onDelete: "set null" },
-  ),
-  depth: integer("depth").notNull(),
-  isDeleted: boolean("is_deleted").notNull().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
-
-export const blogsTable = appSchema.table("blogs", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 200 }).notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
-
-export const blogCommentsTable = appSchema.table("blog_comments", {
-  id: serial("id").primaryKey(),
-  postId: integer("post_id").references(() => postsTable.id, {
-    onDelete: "set null",
-  }),
-  parentId: integer("parent_id").references(
-    (): AnyPgColumn => postCommentsTable.id,
-    { onDelete: "set null" },
-  ),
-  depth: integer("depth").notNull(),
-  content: varchar("content", { length: 255 }).notNull(),
-  blogId: integer("blog_id").references(() => blogsTable.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});

@@ -11,7 +11,7 @@ if (!ACCESS_TOKEN_JWT_SECRET) {
 const accessSecret = new TextEncoder().encode(ACCESS_TOKEN_JWT_SECRET);
 
 export interface AccessTokenClaims {
-  userId: string;
+  userId: number;
   email: string;
   nickname: string;
   role: string;
@@ -32,7 +32,7 @@ export async function signAccessToken(
     role: payload.role,
   })
     .setProtectedHeader({ alg: "HS256" })
-    .setSubject(payload.userId)
+    .setSubject(String(payload.userId))
     .setIssuedAt()
     .setExpirationTime(ACCESS_TOKEN_EXPIRES_IN)
     .sign(accessSecret);

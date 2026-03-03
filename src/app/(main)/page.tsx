@@ -1,30 +1,23 @@
-import Image from "next/image";
+// src/app/(main)/page.tsx
+import PromptList from "@/features/prompts/components/prompt-list";
 
-export default function Home() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
+}) {
+  const { q = "", category = "", sort = "latest" } = await searchParams;
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <h1>안녕하세요 저는 첫번째 페이지를 만들었습니다.</h1>
-        <p>반갑습니다.</p>
-
-        <Image
-          src="/photo.jpg"
-          alt="photo"
-          width={200}
-          height={200}
-          // preload={false}
-        />
-        <hr />
-
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-      </main>
+    <div style={{ paddingTop: 80, paddingBottom: 80 }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 36px 28px" }}>
+        <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(28px,3.5vw,42px)", letterSpacing: "-1.5px", color: "#fff", marginBottom: 6 }}>
+          프롬프트 탐색
+        </h1>
+        <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 0 }}>
+          검증된 프롬프트를 찾고, Fork하고, 발전시키세요.
+        </p>
+      </div>
+      <PromptList q={q} category={category} sort={sort} />
     </div>
   );
 }
