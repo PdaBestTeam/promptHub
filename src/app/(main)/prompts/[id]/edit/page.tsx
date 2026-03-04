@@ -15,7 +15,6 @@ export default function EditPromptPage() {
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<number | "">("");
-  const [isPublic, setIsPublic] = useState(true);
   const [changeNote, setChangeNote] = useState("");
   const [currentVersionNo, setCurrentVersionNo] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -36,7 +35,6 @@ export default function EditPromptPage() {
       setDescription(pr.description ?? "");
       setContent(pr.content);
       setCategoryId(pr.category?.id ?? "");
-      setIsPublic(pr.isPublic);
       setCurrentVersionNo(pr.currentVersionNo);
       setCategories(cats.data ?? []);
       setLoading(false);
@@ -49,7 +47,7 @@ export default function EditPromptPage() {
     setSaving(true); setError("");
     const res = await authFetch(`/api/prompts/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ title, description, content, categoryId: categoryId || null, isPublic, changeNote }),
+      body: JSON.stringify({ title, description, content, categoryId: categoryId || null, isPublic: true, changeNote }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error); setSaving(false); return; }
@@ -94,25 +92,13 @@ export default function EditPromptPage() {
               <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>설명</label>
               <textarea style={{ ...inputStyle, minHeight: 80, resize: "vertical", lineHeight: 1.6 } as React.CSSProperties} value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>카테고리</label>
-                <select style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: "pointer", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 13px center" } as React.CSSProperties}
-                  value={categoryId} onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}>
-                  <option value="">카테고리 없음</option>
-                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>공개 설정</label>
-                <div style={{ display: "flex", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
-                  {[{ val: true, label: "🌍 공개" }, { val: false, label: "🔒 비공개" }].map(({ val, label }) => (
-                    <div key={String(val)} onClick={() => setIsPublic(val)} style={{ flex: 1, padding: "10px 8px", cursor: "pointer", fontSize: 12, textAlign: "center", background: isPublic === val ? "var(--accent)" : "none", color: isPublic === val ? "#fff" : "var(--text-muted)", transition: "all .15s" }}>
-                      {label}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>카테고리</label>
+              <select style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: "pointer", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 13px center" } as React.CSSProperties}
+                value={categoryId} onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}>
+                <option value="">카테고리 없음</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
           </div>
 
@@ -132,7 +118,7 @@ export default function EditPromptPage() {
 
           {/* Danger zone */}
           <div style={{ background: "var(--red-dim)", border: "1px solid var(--red-border)", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--red)", marginBottom: 6 }}>⚠️ 위험 구역</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--red)", marginBottom: 6 }}>⚠️ 주의</div>
             <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 12 }}>삭제 시 모든 버전 히스토리가 함께 삭제됩니다. 되돌릴 수 없습니다.</div>
             <button type="button" className="btn-danger" onClick={() => setShowDeleteModal(true)}>🗑 프롬프트 삭제</button>
           </div>
