@@ -8,7 +8,7 @@ interface Category { id: number; name: string; slug: string; }
 
 export default function NewPromptPage() {
   const router = useRouter();
-  const { user, authFetch } = useAuth();
+  const { user, loading: authLoading, authFetch } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -18,9 +18,10 @@ export default function NewPromptPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     fetch("/api/categories").then((r) => r.json()).then((d) => setCategories(d.data ?? []));
-  }, [user]);
+  }, [authLoading, user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

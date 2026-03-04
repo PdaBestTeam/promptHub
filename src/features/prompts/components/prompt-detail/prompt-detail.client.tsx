@@ -73,6 +73,8 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
   const [forkTitle, setForkTitle] = useState("");
   const [forking, setForking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const id = prompt.id;
   const isAuthor = user?.id === prompt.author.id;
@@ -103,6 +105,12 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
     setForking(false);
     setShowForkModal(false);
     if (data.id) router.push(`/prompts/${data.id}/edit`);
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    await authFetch(`/api/prompts/${id}`, { method: "DELETE" });
+    router.push("/");
   }
 
   function copyPrompt() {
@@ -153,6 +161,9 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
               >{prompt.isScrapped ? "♥" : "♡"} {prompt.isScrapped ? "스크랩됨" : "스크랩"}</button>
               {isAuthor && (
                 <button className="btn-ghost" style={{ padding: "9px 16px" }} onClick={() => router.push(`/prompts/${id}/edit`)}>✏️ 수정</button>
+              )}
+              {isAuthor && (
+                <button className="btn-ghost" style={{ padding: "9px 16px", color: "var(--red)", borderColor: "var(--red-border)" }} onClick={() => setShowDeleteModal(true)}>🗑 삭제</button>
               )}
             </div>
 
@@ -248,6 +259,20 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
           </div>
         </div>
       </div>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(4px)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowDeleteModal(false)}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: 28, maxWidth: 400, width: "100%", margin: 20 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 12 }}>정말 삭제하시겠어요?</div>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없으며, 모든 버전과 Fork 정보가 삭제됩니다.</div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn-ghost" onClick={() => setShowDeleteModal(false)}>취소</button>
+              <button className="btn-danger" onClick={handleDelete} disabled={deleting}>{deleting ? "삭제 중..." : "🗑 삭제"}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fork Modal */}
       {showForkModal && (

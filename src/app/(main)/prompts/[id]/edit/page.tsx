@@ -9,7 +9,7 @@ interface Category { id: number; name: string; slug: string; }
 export default function EditPromptPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
-  const { user, authFetch } = useAuth();
+  const { user, loading: authLoading, authFetch } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -24,6 +24,7 @@ export default function EditPromptPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     async function load() {
       const [pr, cats] = await Promise.all([
@@ -40,7 +41,7 @@ export default function EditPromptPage() {
       setLoading(false);
     }
     load();
-  }, [id, user]);
+  }, [id, authLoading, user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
