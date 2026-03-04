@@ -103,7 +103,7 @@ export default function MypagePage() {
 
         {/* Tabs */}
         <div style={{ display: "flex", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 4, marginBottom: 24, width: "fit-content" }}>
-          {([["written", "📝 내가 쓴 프롬프트", myPrompts.length], ["scraps", "♡ 스크랩", scraps.length], ["profile", "⚙️ 계정 설정", null]] as const).map(([key, label, count]) => (
+          {([["written", "📝 내가 쓴 프롬프트", userInfo?.promptCount ?? 0], ["scraps", "♡ 스크랩", userInfo?.scrapCount ?? 0], ["profile", "⚙️ 계정 설정", null]] as const).map(([key, label, count]) => (
             <button
               key={key}
               onClick={() => setTab(key)}

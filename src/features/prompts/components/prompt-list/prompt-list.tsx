@@ -38,6 +38,7 @@ export default async function PromptList({ q = "", category = "", sort = "latest
   return (
     <PromptListClient
       initialPrompts={promptsData.data ?? []}
+      initialTotal={promptsData.total ?? 0}
       categories={catsData.data ?? []}
       initialQ={q}
       initialCategory={category}

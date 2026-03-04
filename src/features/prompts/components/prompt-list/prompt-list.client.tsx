@@ -25,6 +25,7 @@ interface Prompt {
 
 interface Props {
   initialPrompts: Prompt[];
+  initialTotal: number;
   categories: Category[];
   initialQ: string;
   initialCategory: string;
@@ -40,6 +41,7 @@ const BG_COLORS: Record<string, string> = {
 
 export default function PromptListClient({
   initialPrompts,
+  initialTotal,
   categories,
   initialQ,
   initialCategory,
@@ -49,6 +51,7 @@ export default function PromptListClient({
   const { user, authFetch } = useAuth();
 
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
+  const [totalCount, setTotalCount] = useState(initialTotal);
   const [q, setQ] = useState(initialQ);
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState(initialSort);
@@ -65,6 +68,7 @@ export default function PromptListClient({
       const res = await authFetch(`/api/prompts?${params}`);
       const data = await res.json();
       const rows: Prompt[] = data.data ?? [];
+      if (typeof data.total === "number") setTotalCount(data.total);
       if (reset) setPrompts(rows);
       else setPrompts((prev) => [...prev, ...rows]);
       setHasMore(rows.length === 12);
@@ -141,7 +145,7 @@ export default function PromptListClient({
       </div>
 
       <div style={{ marginBottom: 16, fontSize: 13, color: "var(--text-muted)" }}>
-        총 <strong style={{ color: "var(--text)" }}>{prompts.length}</strong>건
+        총 <strong style={{ color: "var(--text)" }}>{totalCount}</strong>건
       </div>
 
       {/* Cards grid */}
