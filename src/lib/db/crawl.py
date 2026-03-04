@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-prpt.ai API 크롤러 → PostgreSQL (promptHub 스키마)
+prpt.ai 크롤러 → PostgreSQL (promptHub 스키마)
 ================================================
 필요 패키지:
-    pip install requests psycopg2-binary
+    pip install requests psycopg2-binary playwright
+    playwright install chromium
 
 실행:
     python crawler_prpt_ai.py
@@ -11,16 +12,18 @@ prpt.ai API 크롤러 → PostgreSQL (promptHub 스키마)
 
 import time
 import logging
+import asyncio
 import requests
 import psycopg2
+from playwright.async_api import async_playwright, Page, TimeoutError as PwTimeout
 
 # ─────────────────────────────────────────────
 # 설정
 # ─────────────────────────────────────────────
 DB_DSN   = "postgresql://postgres.teagtpusucaresoadgrg:L2PmpJJWRl17tnhh@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres"
-API_BASE = "https://api.prpt.ai"
+API_BASE  = "https://api.prpt.ai"
+SITE_BASE = "https://www.prpt.ai"
 
-# 카테고리명 → (DB slug, prpt.ai categoryId)
 CATEGORIES = {
     "개발":    ("development",    7),
     "고민해결": ("problem-solving", 14),
@@ -32,8 +35,9 @@ BOT_USER_ID    = "bot-prptai-crawler"
 BOT_USER_EMAIL = "crawler@prpt.ai"
 BOT_USER_NAME  = "prpt.ai Crawler"
 
-PAGE_SIZE = 50
-DELAY     = 0.2
+PAGE_SIZE    = 50
+API_DELAY    = 0.2   # requests 딜레이
+DETAIL_DELAY = 0.5   # Playwright 딜레이
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,9 +47,8 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-    "Referer":    "https://www.prpt.ai/",
-    "Origin":     "https://www.prpt.ai",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Referer": "https://www.prpt.ai/",
 }
 
 
@@ -55,7 +58,6 @@ HEADERS = {
 def setup_db(conn) -> dict:
     cur = conn.cursor()
 
-    # better-auth public."user" 테이블에 봇 유저 삽입 (id = text 타입)
     cur.execute("""
         INSERT INTO public."user" (id, name, email, email_verified, created_at, updated_at)
         VALUES (%s, %s, %s, TRUE, NOW(), NOW())
@@ -80,10 +82,9 @@ def setup_db(conn) -> dict:
 
 
 # ─────────────────────────────────────────────
-# API 호출
+# API로 목록 수집 (requests)
 # ─────────────────────────────────────────────
 def fetch_all(category_id: int, cat_name: str) -> list[dict]:
-    """페이지네이션으로 전체 목록 수집. 목록 API에 모든 필드 포함."""
     all_items = []
     start = 1
 
@@ -108,38 +109,62 @@ def fetch_all(category_id: int, cat_name: str) -> list[dict]:
             break
 
         all_items.extend(items)
-        log.info(f"  [{cat_name}] {start}~{start+len(items)-1}행 ({len(items)}건) 수집")
+        log.info(f"  [{cat_name}] {start}~{start+len(items)-1}행 ({len(items)}건)")
 
         if len(items) < PAGE_SIZE:
-            break  # 마지막 페이지
+            break
 
         start += PAGE_SIZE
-        time.sleep(DELAY)
+        time.sleep(API_DELAY)
 
-    log.info(f"[{cat_name}] 총 {len(all_items)}건")
+    log.info(f"[{cat_name}] 총 {len(all_items)}건 수집")
     return all_items
+
+
+# ─────────────────────────────────────────────
+# 상세 페이지에서 description 수집 (Playwright)
+# ─────────────────────────────────────────────
+def detail_url(post_id: int, platform_type: str) -> str:
+    """PLATFORM_TYPE: 'D'=텍스트형, 그 외=이미지형"""
+    if platform_type == "D":
+        return f"{SITE_BASE}/prompt/textDetail/{post_id}"
+    else:
+        return f"{SITE_BASE}/prompt/imageDetail/{post_id}"
+
+
+async def fetch_description(page: Page, post_id: int, platform_type: str) -> str | None:
+    url = detail_url(post_id, platform_type)
+    try:
+        await page.goto(url, wait_until="networkidle", timeout=20000)
+        await page.wait_for_timeout(800)
+        # 소개 텍스트: .info-cont 안의 첫 번째 .txt
+        desc = await page.locator(".info-cont .txt").first.inner_text(timeout=3000)
+        desc = desc.strip()
+        return desc if desc else None
+    except PwTimeout:
+        log.warning(f"  타임아웃: {url}")
+        return None
+    except Exception as e:
+        log.warning(f"  description 수집 실패 (id={post_id}): {e}")
+        return None
 
 
 # ─────────────────────────────────────────────
 # DB 저장
 # ─────────────────────────────────────────────
-def save_prompt(conn, item: dict, cat_db_id: int) -> int | None:
-    # 목록 API 필드명: TITLE, PROMPT, RESULT, VIEW_COUNT, COUNT_FAVORITE, POST_ID
-    title   = str(item.get("TITLE") or "").strip()[:300]
-    content = str(item.get("PROMPT") or "").strip()
-    desc    = str(item.get("RESULT") or "").strip() or None  # RESULT를 description으로 활용
+def save_prompt(conn, item: dict, description: str | None, cat_db_id: int) -> int | None:
+    title      = str(item.get("TITLE") or "").strip()[:300]
+    content    = str(item.get("PROMPT") or "").strip()
     view_count = int(item.get("VIEW_COUNT", 0) or 0)
     like_count = int(item.get("COUNT_FAVORITE", 0) or 0)
     post_id    = item.get("POST_ID")
-    source_url = f"https://www.prpt.ai/prompt/{post_id}" if post_id else ""
+    platform   = item.get("PLATFORM_TYPE", "D")
+    source_url = detail_url(post_id, platform)
 
     if not title or not content:
-        log.debug(f"  ⚠ 빈 title/content 스킵 (POST_ID={post_id})")
         return None
 
     cur = conn.cursor()
-
-    # 중복 체크
     cur.execute("""
         SELECT id FROM "promptHub".prompts
         WHERE author_id = %s AND title = %s
@@ -154,7 +179,7 @@ def save_prompt(conn, item: dict, cat_db_id: int) -> int | None:
              is_public, current_version_no, view_count, scrap_count, fork_count)
         VALUES (%s, %s, %s, %s, %s, TRUE, 1, %s, %s, 0)
         RETURNING id
-    """, (BOT_USER_ID, cat_db_id, title, content, desc, view_count, like_count))
+    """, (BOT_USER_ID, cat_db_id, title, content, description, view_count, like_count))
     prompt_id = cur.fetchone()[0]
 
     cur.execute("""
@@ -175,42 +200,60 @@ def save_prompt(conn, item: dict, cat_db_id: int) -> int | None:
 # ─────────────────────────────────────────────
 # 메인
 # ─────────────────────────────────────────────
-def main():
+async def main():
     log.info("DB 연결 중...")
     conn = psycopg2.connect(DB_DSN)
     cat_ids = setup_db(conn)
 
     stats = {cat: {"found": 0, "saved": 0, "skipped": 0, "error": 0} for cat in CATEGORIES}
 
-    for cat_name, (slug, api_cat_id) in CATEGORIES.items():
-        cat_db_id = cat_ids[cat_name]
-        log.info(f"\n{'='*50}\n카테고리: [{cat_name}] (api_id={api_cat_id})\n{'='*50}")
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=True)
+        ctx = await browser.new_context(
+            user_agent=HEADERS["User-Agent"],
+            locale="ko-KR",
+        )
+        detail_page = await ctx.new_page()
 
-        items = fetch_all(api_cat_id, cat_name)
-        stats[cat_name]["found"] = len(items)
+        for cat_name, (slug, api_cat_id) in CATEGORIES.items():
+            cat_db_id = cat_ids[cat_name]
+            log.info(f"\n{'='*55}\n카테고리: [{cat_name}] (api_id={api_cat_id})\n{'='*55}")
 
-        for i, item in enumerate(items, 1):
-            post_id = item.get("POST_ID")
-            title_preview = str(item.get("TITLE") or "")[:45]
-            log.info(f"[{cat_name}] {i}/{len(items)} id={post_id} | {title_preview}")
+            items = fetch_all(api_cat_id, cat_name)
+            stats[cat_name]["found"] = len(items)
 
-            try:
-                pid = save_prompt(conn, item, cat_db_id)
-                if pid:
-                    log.info(f"  ✅ 저장 (prompt_id={pid})")
-                    stats[cat_name]["saved"] += 1
-                else:
-                    stats[cat_name]["skipped"] += 1
-            except Exception as e:
-                log.error(f"  ❌ DB 오류: {e}")
-                conn.rollback()
-                stats[cat_name]["error"] += 1
+            for i, item in enumerate(items, 1):
+                post_id  = item.get("POST_ID")
+                platform = item.get("PLATFORM_TYPE", "D")
+                title_preview = str(item.get("TITLE") or "")[:45]
+                log.info(f"[{cat_name}] {i}/{len(items)} id={post_id} ({platform}) | {title_preview}")
+
+                # 상세 페이지에서 description 수집
+                description = await fetch_description(detail_page, post_id, platform)
+                if description:
+                    log.info(f"  📝 description: {description[:60]}")
+                await asyncio.sleep(DETAIL_DELAY)
+
+                try:
+                    pid = save_prompt(conn, item, description, cat_db_id)
+                    if pid:
+                        log.info(f"  ✅ 저장 (prompt_id={pid})")
+                        stats[cat_name]["saved"] += 1
+                    else:
+                        log.info(f"  ⏭  스킵 (중복/빈값)")
+                        stats[cat_name]["skipped"] += 1
+                except Exception as e:
+                    log.error(f"  ❌ DB 오류: {e}")
+                    conn.rollback()
+                    stats[cat_name]["error"] += 1
+
+        await browser.close()
 
     conn.close()
 
-    log.info("\n" + "="*50)
+    log.info("\n" + "="*55)
     log.info("완료 리포트")
-    log.info("="*50)
+    log.info("="*55)
     total = 0
     for cat, s in stats.items():
         log.info(f"[{cat}] 발견:{s['found']} 저장:{s['saved']} 스킵:{s['skipped']} 오류:{s['error']}")
@@ -219,4 +262,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
