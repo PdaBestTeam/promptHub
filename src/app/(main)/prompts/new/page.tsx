@@ -14,7 +14,6 @@ export default function NewPromptPage() {
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<number | "">("");
-  const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,7 +29,7 @@ export default function NewPromptPage() {
     setError("");
     const res = await authFetch("/api/prompts", {
       method: "POST",
-      body: JSON.stringify({ title, description, content, categoryId: categoryId || null, isPublic }),
+      body: JSON.stringify({ title, description, content, categoryId: categoryId || null, isPublic: true }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error); setSaving(false); return; }
@@ -92,20 +91,7 @@ export default function NewPromptPage() {
             </div>
           </div>
 
-          {/* Visibility */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 28, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".9px", color: "var(--text-muted)", marginBottom: 18, paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>공개 설정</div>
-            <div style={{ display: "flex", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden", width: "fit-content" }}>
-              {[{ val: true, label: "🌍 공개" }, { val: false, label: "🔒 비공개" }].map(({ val, label }) => (
-                <div key={String(val)} onClick={() => setIsPublic(val)} style={{ padding: "8px 18px", cursor: "pointer", fontSize: 13, background: isPublic === val ? "var(--accent)" : "none", color: isPublic === val ? "#fff" : "var(--text-muted)", fontWeight: isPublic === val ? 600 : 400, transition: "all .15s" }}>
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>비공개로 설정하면 나만 볼 수 있습니다.</div>
-          </div>
-
-          {error && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 12, padding: "8px 12px", background: "var(--red-dim)", border: "1px solid var(--red-border)", borderRadius: 8 }}>{error}</div>}
+{error && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 12, padding: "8px 12px", background: "var(--red-dim)", border: "1px solid var(--red-border)", borderRadius: 8 }}>{error}</div>}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 8 }}>
             <button type="button" className="btn-secondary" onClick={() => router.back()}>← 취소</button>
