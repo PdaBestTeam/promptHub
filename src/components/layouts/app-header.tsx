@@ -28,7 +28,7 @@ export default function AppHeader() {
         justifyContent: "space-between",
         padding: "0 36px",
         height: "60px",
-        background: "rgba(10,10,15,0.92)",
+        background: "rgba(245,244,240,0.92)",
         backdropFilter: "blur(20px)",
         borderBottom: "1px solid var(--border)",
       }}

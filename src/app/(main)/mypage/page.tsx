@@ -86,14 +86,14 @@ export default function MypagePage() {
             {initials}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: "-.5px", color: "#fff", marginBottom: 4 }}>{userInfo?.nickname}</div>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: "-.5px", color: "var(--text)", marginBottom: 4 }}>{userInfo?.nickname}</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
               {userInfo?.email} · 가입 {userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit" }) : ""}
             </div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[["프롬프트", userInfo?.promptCount ?? 0], ["스크랩한 글", userInfo?.scrapCount ?? 0]].map(([label, num]) => (
                 <div key={String(label)} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 700, color: "#fff" }}>{num}</span>
+                  <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 700, color: "var(--text)" }}>{num}</span>
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
                 </div>
               ))}

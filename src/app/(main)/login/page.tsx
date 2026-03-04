@@ -36,10 +36,10 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 20px 40px" }}>
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 420, boxShadow: "0 30px 80px rgba(0,0,0,.4)" }}>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 36, width: "100%", maxWidth: 420, boxShadow: "0 20px 60px rgba(0,0,0,.10)" }}>
         <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, color: "var(--accent)", marginBottom: 6 }}>PromptHub</div>
         <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 28, lineHeight: 1.5 }}>검증된 프롬프트를 찾고, Fork하고, 발전시키세요.</div>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 24, letterSpacing: "-.8px", color: "#fff", marginBottom: 4 }}>다시 오셨군요 👋</div>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 24, letterSpacing: "-.8px", color: "var(--text)", marginBottom: 4 }}>다시 오셨군요 👋</div>
         <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>로그인하고 프롬프트를 이어서 탐색하세요.</div>
 
         <form onSubmit={handleSubmit}>

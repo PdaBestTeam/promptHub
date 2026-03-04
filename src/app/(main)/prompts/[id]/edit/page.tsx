@@ -71,7 +71,7 @@ export default function EditPromptPage() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 36px 80px" }}>
         <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10, cursor: "pointer" }} onClick={() => router.push(`/prompts/${id}`)}>← 상세 페이지로 돌아가기</div>
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(24px,3vw,36px)", letterSpacing: "-1.2px", color: "#fff", marginBottom: 6 }}>프롬프트 수정</h1>
+          <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(24px,3vw,36px)", letterSpacing: "-1.2px", color: "var(--text)", marginBottom: 6 }}>프롬프트 수정</h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)" }}>수정 내용은 새 버전(v{currentVersionNo + 1})으로 자동 저장됩니다.</p>
         </div>
 

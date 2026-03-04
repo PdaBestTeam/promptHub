@@ -105,7 +105,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(prompt.createdAt).toLocaleDateString("ko-KR")}</span>
             </div>
 
-            <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(20px,2.5vw,30px)", letterSpacing: "-.8px", lineHeight: 1.2, color: "#fff", marginBottom: 10 }}>
+            <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(20px,2.5vw,30px)", letterSpacing: "-.8px", lineHeight: 1.2, color: "var(--text)", marginBottom: 10 }}>
               {displayTitle}
             </h1>
             {prompt.description && <p style={{ color: "var(--text-dim)", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>{prompt.description}</p>}

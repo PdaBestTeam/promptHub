@@ -35,7 +35,7 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   illustration: "🎨", dev: "💻", advice: "💬", travel: "✈️",
 };
 const BG_COLORS: Record<string, string> = {
-  illustration: "#1d0f1e", dev: "#0d1e1a", advice: "#1a1208", travel: "#0d1b2e", default: "#13131a",
+  illustration: "#f5eef8", dev: "#eef5f0", advice: "#fdf6ec", travel: "#eef3fb", default: "#f0eeeb",
 };
 
 export default function PromptListClient({
@@ -173,7 +173,7 @@ export default function PromptListClient({
                   )}
                   <button
                     onClick={(e) => toggleScrap(e, prompt)}
-                    style={{ position: "absolute", top: 9, right: 9, width: 28, height: 28, backdropFilter: "blur(8px)", border: `1px solid ${prompt.isScrapped ? "var(--accent-border)" : "var(--border)"}`, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: prompt.isScrapped ? "var(--accent)" : "var(--text-muted)", background: prompt.isScrapped ? "var(--accent-dim)" : "rgba(10,10,15,.65)", transition: "all .15s" } as React.CSSProperties}
+                    style={{ position: "absolute", top: 9, right: 9, width: 28, height: 28, backdropFilter: "blur(8px)", border: `1px solid ${prompt.isScrapped ? "var(--accent-border)" : "var(--border)"}`, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: prompt.isScrapped ? "var(--accent)" : "var(--text-muted)", background: prompt.isScrapped ? "var(--accent-dim)" : "rgba(255,255,255,0.75)", transition: "all .15s" } as React.CSSProperties}
                   >
                     {prompt.isScrapped ? "♥" : "♡"}
                   </button>

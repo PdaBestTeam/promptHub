@@ -43,7 +43,7 @@ export default function NewPromptPage() {
     <div style={{ paddingTop: 60 }}>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 36px 80px" }}>
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(24px,3vw,36px)", letterSpacing: "-1.2px", color: "#fff", marginBottom: 6 }}>새 프롬프트 등록</h1>
+          <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(24px,3vw,36px)", letterSpacing: "-1.2px", color: "var(--text)", marginBottom: 6 }}>새 프롬프트 등록</h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)" }}>
             검증된 프롬프트를 커뮤니티와 공유하세요. 변수는{" "}
             <code style={{ background: "var(--accent-dim)", color: "var(--accent)", padding: "2px 6px", borderRadius: 4, fontSize: 12 }}>{"{{변수명}}"}</code>{" "}

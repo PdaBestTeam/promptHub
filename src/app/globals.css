@@ -3,27 +3,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── PromptHub Design Tokens (Dark Theme) ─── */
+/* ─── PromptHub Design Tokens (Light Theme) ─── */
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --surface2: #1c1c28;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.16);
-  --text: #e8e8f0;
-  --text-muted: #6b6b80;
-  --text-dim: #9898b0;
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #edecea;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.18);
+  --text: #1a1a20;
+  --text-muted: #8a8a9a;
+  --text-dim: #5a5a6e;
   --accent: #ff9154;
-  --accent-dim: rgba(255, 145, 84, 0.12);
-  --accent-border: rgba(255, 145, 84, 0.28);
-  --green: #10a37f;
-  --green-dim: rgba(16, 163, 127, 0.12);
-  --green-border: rgba(16, 163, 127, 0.28);
-  --red: #f04438;
-  --red-dim: rgba(240, 68, 56, 0.1);
-  --red-border: rgba(240, 68, 56, 0.28);
-  --purple: #c472d8;
-  --purple-dim: rgba(196, 114, 216, 0.12);
+  --accent-dim: rgba(255, 145, 84, 0.10);
+  --accent-border: rgba(255, 145, 84, 0.32);
+  --green: #0e9272;
+  --green-dim: rgba(14, 146, 114, 0.10);
+  --green-border: rgba(14, 146, 114, 0.28);
+  --red: #d93025;
+  --red-dim: rgba(217, 48, 37, 0.08);
+  --red-border: rgba(217, 48, 37, 0.25);
+  --purple: #9c4dcc;
+  --purple-dim: rgba(156, 77, 204, 0.10);
   --radius: 0.625rem;
 
   /* Map to Tailwind v4 internal tokens if needed, but we'll use our own mostly */
@@ -55,7 +55,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--bg);
 }
 
@@ -69,7 +69,7 @@ body {
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
 
 /* ── Animations ── */
 @keyframes fadeUp {
@@ -102,7 +102,7 @@ body {
 .ph-card:hover {
   border-color: var(--accent-border);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.10);
 }
 
 .btn-primary {
