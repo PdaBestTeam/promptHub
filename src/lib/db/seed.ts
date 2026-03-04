@@ -14,8 +14,8 @@ const db = drizzle(pool, { schema });
 
 const CATEGORIES = [
   { name: "일러스트", slug: "illustration" },
-  { name: "개발", slug: "dev" },
-  { name: "고민해결", slug: "advice" },
+  { name: "개발", slug: "development" },
+  { name: "고민해결", slug: "problem-solving" },
   { name: "여행", slug: "travel" },
 ];
 
@@ -31,13 +31,13 @@ const SAMPLE_PROMPTS = [
     title: "코드 리뷰어 — 시니어 개발자 관점",
     description: "시니어 개발자 시각에서 코드를 분석하고 개선점을 제시합니다.",
     content: `당신은 10년 경력의 시니어 풀스택 개발자입니다.\n\n아래 코드를 리뷰해주세요.\n\n[코드]\n{{코드}}\n\n[사용 언어/프레임워크]\n{{언어_프레임워크}}\n\n다음 항목으로 리뷰해주세요:\n1. 버그 및 잠재적 문제\n2. 성능 개선 포인트\n3. 가독성/유지보수성\n4. 보안 취약점\n5. 최종 개선 코드 제안`,
-    categorySlug: "dev",
+    categorySlug: "development",
   },
   {
     title: "인생 고민 해결사 — 5단계 분석",
     description: "복잡한 인생 고민을 체계적으로 분석하고 해결책을 제시합니다.",
     content: `당신은 공감 능력이 뛰어난 인생 상담사입니다.\n\n[고민 내용]\n{{고민 내용}}\n\n다음 5단계로 분석해주세요:\n1단계: 핵심 문제 파악\n2단계: 감정 공감\n3단계: 상황 분석\n4단계: 해결 방안 3가지\n5단계: 실행 계획`,
-    categorySlug: "advice",
+    categorySlug: "problem-solving",
   },
   {
     title: "여행 완벽 플래너 — 일정표 자동 생성",
@@ -49,7 +49,7 @@ const SAMPLE_PROMPTS = [
     title: "SQL 쿼리 최적화 전문가",
     description: "느린 SQL 쿼리를 분석하고 최적화 방안을 제시합니다.",
     content: `당신은 DB 성능 최적화 전문가입니다.\n\n[현재 쿼리]\n{{SQL 쿼리}}\n\n[테이블 구조]\n{{테이블 스키마}}\n\n[문제 상황]\n{{성능 문제}}\n\n다음을 분석해주세요:\n1. 현재 쿼리의 문제점\n2. 인덱스 추천\n3. 최적화된 쿼리\n4. 실행 계획 설명`,
-    categorySlug: "dev",
+    categorySlug: "development",
   },
   {
     title: "SNS 여행기 작성기 — 감성 가득",

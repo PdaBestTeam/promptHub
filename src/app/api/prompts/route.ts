@@ -14,7 +14,13 @@ import { and, desc, eq, ilike, count } from "drizzle-orm";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
-  const category = searchParams.get("category") ?? "";
+  const rawcategory = searchParams.get("category") ?? "";
+  const category =
+    rawcategory === "dev"
+      ? "development"
+      : rawcategory === "advice"
+        ? "problem-solving"
+        : rawcategory;
   const sort = searchParams.get("sort") ?? "latest";
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
   const limit = Math.min(
