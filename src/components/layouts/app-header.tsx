@@ -49,31 +49,7 @@ export default function AppHeader() {
         PromptHub
       </Link>
 
-      {/* Links */}
-      <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
-        <Link
-          href="/"
-          style={{
-            textDecoration: "none",
-            color: "var(--text-muted)",
-            fontSize: 13,
-            fontWeight: 500,
-            padding: "6px 14px",
-            borderRadius: 8,
-            transition: "all .15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLAnchorElement).style.color = "var(--text)";
-            (e.target as HTMLAnchorElement).style.background = "var(--surface2)";
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLAnchorElement).style.color = "var(--text-muted)";
-            (e.target as HTMLAnchorElement).style.background = "transparent";
-          }}
-        >
-          탐색
-        </Link>
-      </div>
+      <div />
 
       {/* Right side */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
