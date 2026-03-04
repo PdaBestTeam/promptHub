@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
-import { promptsTable, categoriesTable, usersTable } from "@/lib/db/schema";
+import { promptsTable, categoriesTable } from "@/lib/db/schema";
 import { getAuthUser, unauthorized } from "@/lib/http/auth-middleware";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthUser(request);

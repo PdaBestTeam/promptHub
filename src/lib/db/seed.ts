@@ -1,11 +1,10 @@
-// Seed script: npx tsx src/lib/db/seed.ts
 import { config } from "dotenv";
 config({ path: ".env" });
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { randomUUID } from "crypto";
 import * as schema from "@/lib/db/schema";
-import bcrypt from "bcrypt";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -23,7 +22,8 @@ const CATEGORIES = [
 const SAMPLE_PROMPTS = [
   {
     title: "캐릭터 일러스트 스타일 가이드 생성기",
-    description: "원하는 스타일의 캐릭터 일러스트 프롬프트를 자동으로 생성합니다.",
+    description:
+      "원하는 스타일의 캐릭터 일러스트 프롬프트를 자동으로 생성합니다.",
     content: `당신은 전문 일러스트레이터입니다.\n\n아래 정보를 바탕으로 캐릭터 일러스트 프롬프트를 생성해주세요.\n\n[캐릭터 설명]\n{{캐릭터 설명}}\n\n[원하는 스타일]\n{{스타일}}\n\n[분위기]\n{{분위기}}\n\n위 정보를 반영하여 상세하고 전문적인 일러스트 프롬프트를 영문으로 작성해주세요.`,
     categorySlug: "illustration",
   },
@@ -68,17 +68,18 @@ async function seed() {
     .values(CATEGORIES)
     .onConflictDoNothing()
     .returning();
-  
+
   console.log(`✅ Categories: ${insertedCats.length} inserted`);
 
   // 2. Insert demo user
-  const hash = await bcrypt.hash("demo1234!", 10);
   const [demoUser] = await db
     .insert(schema.usersTable)
     .values({
+      id: randomUUID(),
+      name: "PromptHub",
       email: "demo@prompthub.kr",
-      passwordHash: hash,
-      nickname: "PromptHub",
+      emailVerified: true,
+      image: null,
     })
     .onConflictDoNothing()
     .returning();

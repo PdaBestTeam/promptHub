@@ -1,8 +1,14 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
-import { promptsTable, categoriesTable, usersTable, scrapsTable, promptVersionsTable } from "@/lib/db/schema";
+import {
+  promptsTable,
+  categoriesTable,
+  scrapsTable,
+  promptVersionsTable,
+} from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/http/auth-middleware";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike } from "drizzle-orm";
+import * as authSchema from "@/lib/db/auth-schema";
 
 // GET /api/prompts?q=&category=&sort=latest|views|scraps|forks&page=&limit=
 export async function GET(request: NextRequest) {
@@ -11,7 +17,10 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get("category") ?? "";
   const sort = searchParams.get("sort") ?? "latest";
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-  const limit = Math.min(20, Math.max(1, Number(searchParams.get("limit") ?? 12)));
+  const limit = Math.min(
+    20,
+    Math.max(1, Number(searchParams.get("limit") ?? 12)),
+  );
   const offset = (page - 1) * limit;
 
   const auth = await getAuthUser(request);
@@ -24,10 +33,10 @@ export async function GET(request: NextRequest) {
     sort === "views"
       ? desc(promptsTable.viewCount)
       : sort === "scraps"
-      ? desc(promptsTable.scrapCount)
-      : sort === "forks"
-      ? desc(promptsTable.forkCount)
-      : desc(promptsTable.createdAt);
+        ? desc(promptsTable.scrapCount)
+        : sort === "forks"
+          ? desc(promptsTable.forkCount)
+          : desc(promptsTable.createdAt);
 
   const rows = await db
     .select({
@@ -46,14 +55,14 @@ export async function GET(request: NextRequest) {
         slug: categoriesTable.slug,
       },
       author: {
-        id: usersTable.id,
-        nickname: usersTable.nickname,
-        avatarUrl: usersTable.avatarUrl,
+        id: authSchema.user.id,
+        nickname: authSchema.user.name,
+        avatarUrl: authSchema.user.image,
       },
     })
     .from(promptsTable)
     .leftJoin(categoriesTable, eq(promptsTable.categoryId, categoriesTable.id))
-    .innerJoin(usersTable, eq(promptsTable.authorId, usersTable.id))
+    .innerJoin(authSchema.user, eq(promptsTable.authorId, authSchema.user.id))
     .where(and(...conditions))
     .orderBy(orderBy)
     .limit(limit)
@@ -80,10 +89,14 @@ export async function POST(request: NextRequest) {
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { title, content, description, categoryId, isPublic } = await request.json();
+    const { title, content, description, categoryId, isPublic } =
+      await request.json();
 
     if (!title || !content) {
-      return Response.json({ error: "제목과 내용은 필수입니다." }, { status: 400 });
+      return Response.json(
+        { error: "제목과 내용은 필수입니다." },
+        { status: 400 },
+      );
     }
 
     const [prompt] = await db
@@ -112,6 +125,9 @@ export async function POST(request: NextRequest) {
     return Response.json(prompt, { status: 201 });
   } catch (e) {
     console.error(e);
-    return Response.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
+    return Response.json(
+      { error: "서버 오류가 발생했습니다." },
+      { status: 500 },
+    );
   }
 }

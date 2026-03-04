@@ -3,7 +3,6 @@ import { db } from "@/lib/db/client";
 import {
   promptsTable,
   promptVersionsTable,
-  usersTable,
 } from "@/lib/db/schema";
 import { getAuthUser, unauthorized, notFound } from "@/lib/http/auth-middleware";
 import { eq, sql } from "drizzle-orm";

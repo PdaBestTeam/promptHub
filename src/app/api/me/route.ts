@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     .select({
       id: usersTable.id,
       email: usersTable.email,
-      nickname: usersTable.nickname,
-      role: usersTable.role,
-      avatarUrl: usersTable.avatarUrl,
+      nickname: usersTable.name,
+      role: sql<string>`'user'`,
+      avatarUrl: usersTable.image,
       createdAt: usersTable.createdAt,
     })
     .from(usersTable)
@@ -47,16 +47,16 @@ export async function PATCH(request: NextRequest) {
   const [updated] = await db
     .update(usersTable)
     .set({
-      ...(nickname ? { nickname } : {}),
-      ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+      ...(nickname ? { name: nickname } : {}),
+      ...(avatarUrl !== undefined ? { image: avatarUrl } : {}),
     })
     .where(eq(usersTable.id, auth.userId))
     .returning({
       id: usersTable.id,
       email: usersTable.email,
-      nickname: usersTable.nickname,
-      role: usersTable.role,
-      avatarUrl: usersTable.avatarUrl,
+      nickname: usersTable.name,
+      role: sql<string>`'user'`,
+      avatarUrl: usersTable.image,
     });
 
   return Response.json(updated);

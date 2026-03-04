@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,22 +18,20 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (password.length < 8) { setError("비밀번호는 8자 이상이어야 합니다."); return; }
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, nickname }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error); setLoading(false); return; }
-      login(data.token, data.user);
-      router.push("/");
-    } catch {
-      setError("서버 오류가 발생했습니다.");
-      setLoading(false);
+    if (password.length < 8) {
+      setError("비밀번호는 8자 이상이어야 합니다.");
+      return;
     }
+    setLoading(true);
+
+    const result = await signup(nickname, email, password);
+    if (!result.ok) {
+      setError(result.error);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/");
   }
 
   return (

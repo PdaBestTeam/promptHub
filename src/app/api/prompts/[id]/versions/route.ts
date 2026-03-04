@@ -22,7 +22,7 @@ export async function GET(
       createdAt: promptVersionsTable.createdAt,
       editor: {
         id: usersTable.id,
-        nickname: usersTable.nickname,
+        nickname: usersTable.name,
       },
     })
     .from(promptVersionsTable)

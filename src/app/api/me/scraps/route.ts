@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
       },
       author: {
         id: usersTable.id,
-        nickname: usersTable.nickname,
-        avatarUrl: usersTable.avatarUrl,
+        nickname: usersTable.name,
+        avatarUrl: usersTable.image,
       },
     })
     .from(scrapsTable)

@@ -41,8 +41,8 @@ export async function GET(
       },
       author: {
         id: usersTable.id,
-        nickname: usersTable.nickname,
-        avatarUrl: usersTable.avatarUrl,
+        nickname: usersTable.name,
+        avatarUrl: usersTable.image,
       },
     })
     .from(promptsTable)

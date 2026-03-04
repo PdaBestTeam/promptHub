@@ -1,4 +1,6 @@
 import { sql } from "drizzle-orm";
+import * as authSchema from "@/lib/db/auth-schema";
+
 import {
   boolean,
   index,
@@ -14,22 +16,8 @@ import {
 
 const appSchema = pgSchema("promptHub");
 
-// ══════════════════════════════════════════════════════
-// USERS
-// ══════════════════════════════════════════════════════
-export const usersTable = appSchema.table("users", {
-  id: serial("id").primaryKey(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  nickname: varchar("nickname", { length: 80 }).notNull(),
-  role: varchar("role", { length: 20 }).notNull().default("user"),
-  avatarUrl: text("avatar_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+// Compatibility alias for existing API/query code.
+export const usersTable = authSchema.user;
 
 // ══════════════════════════════════════════════════════
 // CATEGORIES  (4 fixed: 일러스트, 개발, 고민해결, 여행)
@@ -47,9 +35,9 @@ export const promptsTable = appSchema.table(
   "prompts",
   {
     id: serial("id").primaryKey(),
-    authorId: integer("author_id")
+    authorId: text("author_id")
       .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+      .references(() => authSchema.user.id, { onDelete: "cascade" }),
     categoryId: integer("category_id").references(() => categoriesTable.id, {
       onDelete: "set null",
     }),
@@ -60,7 +48,7 @@ export const promptsTable = appSchema.table(
     // Fork relations
     parentPromptId: integer("parent_prompt_id").references(
       (): AnyPgColumn => promptsTable.id,
-      { onDelete: "set null" }
+      { onDelete: "set null" },
     ),
     forkedFromVersionId: integer("forked_from_version_id"),
     // Version tracking
@@ -80,7 +68,7 @@ export const promptsTable = appSchema.table(
     index("prompts_category_id_idx").on(table.categoryId),
     index("prompts_created_at_idx").on(table.createdAt),
     index("prompts_title_idx").on(table.title),
-  ]
+  ],
 );
 
 // ══════════════════════════════════════════════════════
@@ -97,14 +85,12 @@ export const promptVersionsTable = appSchema.table(
     title: varchar("title", { length: 300 }).notNull(),
     content: text("content").notNull(),
     changeNote: text("change_note"),
-    editedBy: integer("edited_by")
+    editedBy: text("edited_by")
       .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+      .references(() => authSchema.user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    index("prompt_versions_prompt_id_idx").on(table.promptId),
-  ]
+  (table) => [index("prompt_versions_prompt_id_idx").on(table.promptId)],
 );
 
 // ══════════════════════════════════════════════════════
@@ -113,9 +99,9 @@ export const promptVersionsTable = appSchema.table(
 export const scrapsTable = appSchema.table(
   "scraps",
   {
-    userId: integer("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => usersTable.id, { onDelete: "cascade" }),
+      .references(() => authSchema.user.id, { onDelete: "cascade" }),
     promptId: integer("prompt_id")
       .notNull()
       .references(() => promptsTable.id, { onDelete: "cascade" }),
@@ -128,5 +114,5 @@ export const scrapsTable = appSchema.table(
     }),
     index("scraps_user_id_idx").on(table.userId),
     index("scraps_prompt_id_idx").on(table.promptId),
-  ]
+  ],
 );
