@@ -8,7 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/http/auth-middleware";
 import * as authSchema from "@/lib/db/auth-schema";
-import { and, desc, eq, ilike, or, sql, count } from "drizzle-orm";
+import { and, desc, eq, ilike, count } from "drizzle-orm";
 
 // GET /api/prompts?q=&category=&sort=latest|views|scraps|forks&page=&limit=
 export async function GET(request: NextRequest) {

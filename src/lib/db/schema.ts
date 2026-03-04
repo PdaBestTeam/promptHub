@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import * as authSchema from "@/lib/db/auth-schema";
 
 import {
