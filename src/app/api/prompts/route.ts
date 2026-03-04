@@ -7,8 +7,8 @@ import {
   promptVersionsTable,
 } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/http/auth-middleware";
-import { and, desc, eq, ilike } from "drizzle-orm";
 import * as authSchema from "@/lib/db/auth-schema";
+import { and, desc, eq, ilike, or, sql, count } from "drizzle-orm";
 
 // GET /api/prompts?q=&category=&sort=latest|views|scraps|forks&page=&limit=
 export async function GET(request: NextRequest) {
@@ -37,6 +37,14 @@ export async function GET(request: NextRequest) {
         : sort === "forks"
           ? desc(promptsTable.forkCount)
           : desc(promptsTable.createdAt);
+
+  // 동일 조건 전체 건수 (총 N건 표시용)
+  const [countRow] = await db
+    .select({ total: count() })
+    .from(promptsTable)
+    .leftJoin(categoriesTable, eq(promptsTable.categoryId, categoriesTable.id))
+    .where(and(...conditions));
+  const total = Number(countRow?.total ?? 0);
 
   const rows = await db
     .select({
@@ -80,7 +88,7 @@ export async function GET(request: NextRequest) {
 
   const data = rows.map((r) => ({ ...r, isScrapped: scrappedIds.has(r.id) }));
 
-  return Response.json({ data, page, limit });
+  return Response.json({ data, page, limit, total });
 }
 
 // POST /api/prompts - create new prompt

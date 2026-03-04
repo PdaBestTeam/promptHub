@@ -10,7 +10,7 @@ export default async function ExplorePage({
   return (
     <div style={{ paddingTop: 80, paddingBottom: 80 }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 36px 28px" }}>
-        <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(28px,3.5vw,42px)", letterSpacing: "-1.5px", color: "#fff", marginBottom: 6 }}>
+        <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(28px,3.5vw,42px)", letterSpacing: "-1.5px", color: "var(--text)", marginBottom: 6 }}>
           프롬프트 탐색
         </h1>
         <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 0 }}>

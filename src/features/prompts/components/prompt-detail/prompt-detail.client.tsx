@@ -2,7 +2,7 @@
 // src/features/prompts/components/prompt-detail/prompt-detail.client.tsx
 // Client Component: 스크랩·Fork·버전선택·복사 인터랙션 담당
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -40,9 +40,22 @@ interface Props {
 
 export default function PromptDetailClient({ prompt: initialPrompt, versions }: Props) {
   const router = useRouter();
-  const { user, authFetch } = useAuth();
+  const { user, authFetch, loading: authLoading } = useAuth();
 
   const [prompt, setPrompt] = useState<PromptDetailData>(initialPrompt);
+
+  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화
+  useEffect(() => {
+    if (authLoading || !user) return;
+    authFetch(`/api/prompts/${initialPrompt.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isScrapped !== undefined) {
+          setPrompt((p) => ({ ...p, isScrapped: data.isScrapped, scrapCount: data.scrapCount }));
+        }
+      })
+      .catch(() => {});
+  }, [authLoading, user]);
   const [selectedVer, setSelectedVer] = useState<Version | null>(versions[versions.length - 1] ?? null);
   const [activeTab, setActiveTab] = useState<"forks" | "versions">("versions");
   const [showForkModal, setShowForkModal] = useState(false);
@@ -100,12 +113,11 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
           <div style={{ minWidth: 0 }}>
             {/* Meta */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-              {prompt.isPublic ? <span className="badge badge-public">● 공개</span> : <span className="badge badge-private">🔒 비공개</span>}
-              {prompt.parentPromptId && <span className="badge badge-fork">🔀 Fork</span>}
+{prompt.parentPromptId && <span className="badge badge-fork">🔀 Fork</span>}
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(prompt.createdAt).toLocaleDateString("ko-KR")}</span>
             </div>
 
-            <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(20px,2.5vw,30px)", letterSpacing: "-.8px", lineHeight: 1.2, color: "#fff", marginBottom: 10 }}>
+            <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "clamp(20px,2.5vw,30px)", letterSpacing: "-.8px", lineHeight: 1.2, color: "var(--text)", marginBottom: 10 }}>
               {displayTitle}
             </h1>
             {prompt.description && <p style={{ color: "var(--text-dim)", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>{prompt.description}</p>}

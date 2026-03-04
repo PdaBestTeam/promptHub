@@ -25,6 +25,7 @@ interface Prompt {
 
 interface Props {
   initialPrompts: Prompt[];
+  initialTotal: number;
   categories: Category[];
   initialQ: string;
   initialCategory: string;
@@ -35,11 +36,12 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   illustration: "🎨", dev: "💻", advice: "💬", travel: "✈️",
 };
 const BG_COLORS: Record<string, string> = {
-  illustration: "#1d0f1e", dev: "#0d1e1a", advice: "#1a1208", travel: "#0d1b2e", default: "#13131a",
+  illustration: "#f5eef8", dev: "#eef5f0", advice: "#fdf6ec", travel: "#eef3fb", default: "#f0eeeb",
 };
 
 export default function PromptListClient({
   initialPrompts,
+  initialTotal,
   categories,
   initialQ,
   initialCategory,
@@ -49,6 +51,7 @@ export default function PromptListClient({
   const { user, authFetch } = useAuth();
 
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
+  const [totalCount, setTotalCount] = useState(initialTotal);
   const [q, setQ] = useState(initialQ);
   const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState(initialSort);
@@ -65,6 +68,7 @@ export default function PromptListClient({
       const res = await authFetch(`/api/prompts?${params}`);
       const data = await res.json();
       const rows: Prompt[] = data.data ?? [];
+      if (typeof data.total === "number") setTotalCount(data.total);
       if (reset) setPrompts(rows);
       else setPrompts((prev) => [...prev, ...rows]);
       setHasMore(rows.length === 12);
@@ -141,7 +145,7 @@ export default function PromptListClient({
       </div>
 
       <div style={{ marginBottom: 16, fontSize: 13, color: "var(--text-muted)" }}>
-        총 <strong style={{ color: "var(--text)" }}>{prompts.length}</strong>건
+        총 <strong style={{ color: "var(--text)" }}>{totalCount}</strong>건
       </div>
 
       {/* Cards grid */}
@@ -173,7 +177,7 @@ export default function PromptListClient({
                   )}
                   <button
                     onClick={(e) => toggleScrap(e, prompt)}
-                    style={{ position: "absolute", top: 9, right: 9, width: 28, height: 28, backdropFilter: "blur(8px)", border: `1px solid ${prompt.isScrapped ? "var(--accent-border)" : "var(--border)"}`, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: prompt.isScrapped ? "var(--accent)" : "var(--text-muted)", background: prompt.isScrapped ? "var(--accent-dim)" : "rgba(10,10,15,.65)", transition: "all .15s" } as React.CSSProperties}
+                    style={{ position: "absolute", top: 9, right: 9, width: 28, height: 28, backdropFilter: "blur(8px)", border: `1px solid ${prompt.isScrapped ? "var(--accent-border)" : "var(--border)"}`, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: prompt.isScrapped ? "var(--accent)" : "var(--text-muted)", background: prompt.isScrapped ? "var(--accent-dim)" : "rgba(255,255,255,0.75)", transition: "all .15s" } as React.CSSProperties}
                   >
                     {prompt.isScrapped ? "♥" : "♡"}
                   </button>
