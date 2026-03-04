@@ -2,7 +2,7 @@
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
 // Client Component: 검색·필터·스크랩 인터랙션 담당
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -42,6 +42,20 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "problem-solving": "💬",
   travel: "✈️",
 };
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  illustration: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+  development: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  "problem-solving": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  travel: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  default: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+};
+const CATEGORY_DESCS: Record<string, string> = {
+  illustration: "이미지·그래픽",
+  development: "코딩·기술",
+  "problem-solving": "고민·상담",
+  travel: "여행·탐방",
+  "": "모든 프롬프트",
+};
 const BG_COLORS: Record<string, string> = {
   illustration: "#f5eef8",
   development: "#eef5f0",
@@ -69,6 +83,18 @@ export default function PromptListClient({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialPrompts.length === 12);
+
+  // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경 → 재렌더) 클라이언트 상태 동기화
+  useEffect(() => {
+    setQ(initialQ);
+    setCategory(initialCategory);
+    setSort(initialSort);
+    setPrompts(initialPrompts);
+    setTotalCount(initialTotal);
+    setPage(1);
+    setHasMore(initialPrompts.length === 12);
+  }, [initialQ, initialCategory, initialSort]);
+
 
   const fetchPrompts = useCallback(
     async (
@@ -104,6 +130,13 @@ export default function PromptListClient({
     setSort(newSort);
     setPage(1);
     fetchPrompts(newQ, newCat, newSort, 1, true);
+    // Next.js router.replace로 URL 동기화 → 뒤로가기 시 sort/category/q 복원
+    const params = new URLSearchParams();
+    if (newQ) params.set("q", newQ);
+    if (newCat) params.set("category", newCat);
+    if (newSort && newSort !== "latest") params.set("sort", newSort);
+    const search = params.toString();
+    router.replace(search ? `/?${search}` : "/", { scroll: false });
   }
 
   function loadMore() {
@@ -133,10 +166,12 @@ export default function PromptListClient({
     );
   }
 
+  const allCategories = [{ slug: "", name: "전체", id: 0 }, ...categories];
+
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 36px" }}>
       {/* Filters row */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <div style={{ flex: 1, position: "relative" }}>
           <svg
             style={{
@@ -178,35 +213,112 @@ export default function PromptListClient({
         </select>
       </div>
 
-      {/* Category chips */}
+      {/* Category Cards */}
       <div
-        style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${allCategories.length}, 1fr)`,
+          gap: 10,
+          marginBottom: 24,
+        }}
       >
-        {[{ slug: "", name: "전체" }, ...categories].map((cat) => (
-          <button
-            key={cat.slug}
-            onClick={() =>
-              handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
-            }
-            style={{
-              padding: "5px 12px",
-              borderRadius: 20,
-              border: "1px solid",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              background: category === cat.slug ? "var(--accent-dim)" : "none",
-              borderColor:
-                category === cat.slug
-                  ? "var(--accent-border)"
-                  : "var(--border)",
-              color:
-                category === cat.slug ? "var(--accent)" : "var(--text-muted)",
-            }}
-          >
-            {cat.name}
-          </button>
-        ))}
+        {allCategories.map((cat) => {
+          const isActive = category === cat.slug;
+          const gradient = CATEGORY_GRADIENTS[cat.slug] ?? CATEGORY_GRADIENTS.default;
+          const emoji = CATEGORY_EMOJIS[cat.slug] ?? "✨";
+          const desc = CATEGORY_DESCS[cat.slug] ?? "";
+          return (
+            <button
+              key={cat.slug}
+              onClick={() =>
+                handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
+              }
+              style={{
+                position: "relative",
+                padding: "14px 12px 12px",
+                borderRadius: 14,
+                border: `2px solid ${isActive ? "var(--accent)" : "var(--border)"}`,
+                fontSize: 12,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                background: isActive
+                  ? "var(--accent-dim)"
+                  : "var(--surface)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 6,
+                transition: "all 0.2s ease",
+                transform: isActive ? "translateY(-2px)" : "none",
+                boxShadow: isActive
+                  ? "0 6px 20px var(--accent-border)"
+                  : "none",
+                overflow: "hidden",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = "var(--border-hover)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.transform = "none";
+                  e.currentTarget.style.boxShadow = "none";
+                }
+              }}
+            >
+              {/* Gradient bar on top */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: isActive ? gradient : "transparent",
+                  borderRadius: "14px 14px 0 0",
+                  transition: "all 0.2s ease",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 26,
+                  lineHeight: 1,
+                  filter: isActive
+                    ? "drop-shadow(0 2px 6px rgba(0,0,0,0.15))"
+                    : "none",
+                  transition: "filter 0.2s",
+                }}
+              >
+                {cat.slug === "" ? "🌐" : emoji}
+              </span>
+              <span
+                style={{
+                  fontWeight: isActive ? 700 : 600,
+                  color: isActive ? "var(--accent)" : "var(--text)",
+                  fontSize: 12,
+                  letterSpacing: "-0.2px",
+                }}
+              >
+                {cat.name}
+              </span>
+              {desc && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: isActive ? "var(--accent)" : "var(--text-muted)",
+                    opacity: 0.8,
+                  }}
+                >
+                  {desc}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div

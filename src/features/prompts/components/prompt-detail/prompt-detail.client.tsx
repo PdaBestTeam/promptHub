@@ -99,7 +99,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 36px 80px" }}>
         {/* Breadcrumb */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", marginBottom: 24, flexWrap: "wrap" }}>
-          <span style={{ cursor: "pointer" }} onClick={() => router.push("/")}
+          <span style={{ cursor: "pointer" }} onClick={() => router.back()}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}>탐색</span>
           <span style={{ opacity: 0.3 }}>›</span>
