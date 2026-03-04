@@ -8,7 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/http/auth-middleware";
 import * as authSchema from "@/lib/db/auth-schema";
-import { and, desc, eq, ilike, count } from "drizzle-orm";
+import { and, desc, eq, ilike, count, isNull } from "drizzle-orm";
 
 // GET /api/prompts?q=&category=&sort=latest|views|scraps|forks&page=&limit=
 export async function GET(request: NextRequest) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   const auth = await getAuthUser(request);
 
-  const conditions = [eq(promptsTable.isPublic, true)];
+  const conditions = [eq(promptsTable.isPublic, true), isNull(promptsTable.parentPromptId)];
   if (q) conditions.push(ilike(promptsTable.title, `%${q}%`));
   if (category) conditions.push(eq(categoriesTable.slug, category));
 

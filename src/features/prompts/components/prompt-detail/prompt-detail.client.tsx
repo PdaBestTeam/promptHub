@@ -125,7 +125,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             {/* Actions */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
               <button
-                onClick={() => { setForkTitle(`${prompt.title} (Fork)`); setShowForkModal(true); }}
+                onClick={() => { setForkTitle(`${prompt.title} (Fork v${prompt.currentVersionNo})`); setShowForkModal(true); }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "opacity .15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
@@ -242,7 +242,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>Fork 제목</label>
-              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork)`} />
+              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork v${prompt.currentVersionNo})`} />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowForkModal(false)}>취소</button>
