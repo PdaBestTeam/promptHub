@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
 interface Category { id: number; name: string; slug: string; }
 
-export default function NewPromptPage() {
+function NewPromptContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromForkId = searchParams.get("fromFork");
@@ -170,5 +171,13 @@ export default function NewPromptPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewPromptPage() {
+  return (
+    <Suspense fallback={<div style={{ paddingTop: 80, textAlign: "center", color: "var(--text-muted)" }}>로딩 중...</div>}>
+      <NewPromptContent />
+    </Suspense>
   );
 }
