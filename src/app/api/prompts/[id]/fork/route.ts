@@ -27,7 +27,7 @@ export async function POST(
   if (!source) return notFound("프롬프트를 찾을 수 없습니다.");
 
   const body = await request.json().catch(() => ({}));
-  const title = body.title ?? `${source.title} (Fork)`;
+  const title = body.title ?? `${source.title} (Fork v${source.currentVersionNo})`;
 
   // 루트(원본 A) 찾기
   let root = source;

@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
+import { Binoculars, Heart, GitFork, ClipboardList } from "lucide-react";
 
 interface Version {
   id: string;
@@ -67,6 +68,12 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
   const isAuthor = user?.id === prompt.author.id;
   const displayContent = selectedVer?.content ?? prompt.content;
   const displayTitle = selectedVer?.title ?? prompt.title;
+  const stats = [
+    { key: "views", label: "조회수", value: prompt.viewCount, icon: Binoculars },
+    { key: "scraps", label: "스크랩", value: prompt.scrapCount, icon: Heart },
+    { key: "forks", label: "Fork", value: prompt.forkCount, icon: GitFork },
+    { key: "version", label: "버전", value: `v${prompt.currentVersionNo}`, icon: ClipboardList },
+  ] as const;
 
   async function toggleScrap() {
     if (!user) { router.push("/login"); return; }
@@ -125,7 +132,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             {/* Actions */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
               <button
-                onClick={() => { setForkTitle(`${prompt.title} (Fork)`); setShowForkModal(true); }}
+                onClick={() => { setForkTitle(`${prompt.title} (Fork v${prompt.currentVersionNo})`); setShowForkModal(true); }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "opacity .15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
@@ -209,10 +216,13 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
           <div style={{ display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 76 }}>
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "var(--text-muted)", marginBottom: 12 }}>통계</div>
-              {[["👁 조회수", prompt.viewCount], ["♡ 스크랩", prompt.scrapCount], ["🔀 Fork", prompt.forkCount], ["📋 버전", `v${prompt.currentVersionNo}`]].map(([l, v]) => (
-                <div key={String(l)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: 13, color: "var(--text-dim)" }}>{l}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{v}</span>
+              {stats.map(({ key, label, value, icon: Icon }) => (
+                <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: 13, color: "var(--text-dim)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <Icon size={15} strokeWidth={1.8} />
+                    {label}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{value}</span>
                 </div>
               ))}
             </div>
@@ -242,7 +252,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>Fork 제목</label>
-              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork)`} />
+              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork v${prompt.currentVersionNo})`} />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowForkModal(false)}>취소</button>
