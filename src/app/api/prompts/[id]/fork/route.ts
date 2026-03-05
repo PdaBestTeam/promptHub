@@ -80,7 +80,7 @@ export async function POST(
 
   // 포크 초안에서 "저장"으로 실제 생성
   if (body.createFromDraft === true) {
-    const { title, content, description, categoryId, changeNote } = body;
+    const { title, content, description, categoryId, changeNote, result, modelName } = body;
     if (!title?.trim() || !content?.trim()) {
       return Response.json(
         { error: "제목과 내용은 필수입니다." },
@@ -96,6 +96,8 @@ export async function POST(
         title: title.trim(),
         content: (content ?? source.content).trim(),
         description: (description ?? source.description)?.trim() ?? null,
+        result: result ?? source.result ?? null,
+        modelName: modelName ?? source.modelName ?? null,
         isPublic: true,
         parentPromptId: source.id,
         forkedFromVersionId: body.fromVersionId ?? null,

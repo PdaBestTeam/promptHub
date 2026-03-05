@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GitFork } from "lucide-react";
 
 const STORAGE_KEY = "ph_onboarded";
 
@@ -20,7 +21,7 @@ const slides = [
     color: "linear-gradient(135deg, #9c4dcc 0%, #c880ff 100%)",
   },
   {
-    emoji: "🔀",
+    icon: "GitFork",
     title: "Fork로 나만의 프롬프트 만들기",
     desc: "마음에 드는 프롬프트를 Fork하여 나만의 방식으로 개선해보세요. 버전 관리 기능으로 수정 이력도 체계적으로 관리할 수 있어요.",
     color: "linear-gradient(135deg, #0e9272 0%, #34d399 100%)",
@@ -108,9 +109,16 @@ export default function OnboardingModal() {
             style={{
               filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.2))",
               animation: "heroFloat 2.5s ease-in-out infinite",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {s.emoji}
+            {s.icon === "GitFork" ? (
+              <GitFork size={64} strokeWidth={2} style={{ color: "rgba(255,255,255,0.95)" }} />
+            ) : (
+              s.emoji
+            )}
           </span>
         </div>
 

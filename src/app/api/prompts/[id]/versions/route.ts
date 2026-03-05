@@ -96,26 +96,33 @@ export async function GET(
     versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote])
   );
 
-  const data = rows.map((r) => {
-    const memo = noteMap.get(`${r.id}-${r.versionNo}`);
-    const defaultNote =
-      r.versionNo === 1 ? "원본" : `Fork v${r.versionNo}`;
-    return {
-      id: r.id,
-      versionNo: r.versionNo,
-      title: r.title,
-      content: r.content,
-      changeNote: memo ?? defaultNote,
-      createdAt: r.createdAt,
-      viewCount: r.viewCount,
-      scrapCount: r.scrapCount,
-      forkCount: r.forkCount,
-      editor: {
-        id: userMap.get(r.authorId)?.id ?? r.authorId,
-        nickname: userMap.get(r.authorId)?.name ?? "",
-      },
-    };
-  });
+  const seenIds = new Set<number>();
+  const data = rows
+    .filter((r) => {
+      if (seenIds.has(r.id)) return false;
+      seenIds.add(r.id);
+      return true;
+    })
+    .map((r) => {
+      const memo = noteMap.get(`${r.id}-${r.versionNo}`);
+      const defaultNote =
+        r.versionNo === 1 ? "원본" : `Fork v${r.versionNo}`;
+      return {
+        id: r.id,
+        versionNo: r.versionNo,
+        title: r.title,
+        content: r.content,
+        changeNote: memo ?? defaultNote,
+        createdAt: r.createdAt,
+        viewCount: r.viewCount,
+        scrapCount: r.scrapCount,
+        forkCount: r.forkCount,
+        editor: {
+          id: userMap.get(r.authorId)?.id ?? r.authorId,
+          nickname: userMap.get(r.authorId)?.name ?? "",
+        },
+      };
+    });
 
   return Response.json({ data });
 }

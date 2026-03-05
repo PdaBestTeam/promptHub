@@ -92,9 +92,19 @@ export default function PromptDetailClient({
   });
   const selectedVerRef = useRef<Version | null>(selectedVer);
   selectedVerRef.current = selectedVer;
+  const lastSyncedPromptIdRef = useRef<string | number | null>(null);
+  useEffect(() => {
+    const currentId = initialPrompt.id;
+    if (lastSyncedPromptIdRef.current === currentId) return;
+    lastSyncedPromptIdRef.current = currentId;
+    const match = versions.find((v) => Number(v.id) === Number(currentId));
+    setSelectedVer(match ?? versions[versions.length - 1] ?? null);
+  }, [initialPrompt.id, versions]);
   function selectVersion(v: Version) {
+    if (Number(v.id) === Number(id)) return;
     selectedVerRef.current = v;
     setSelectedVer(v);
+    router.replace(`/prompts/${v.id}`);
   }
   const [activeTab, setActiveTab] = useState<"forks" | "versions">("versions");
   const [showForkModal, setShowForkModal] = useState(false);
@@ -106,6 +116,8 @@ export default function PromptDetailClient({
 
   const id = prompt.id;
   const isAuthor = user?.id === prompt.author.id;
+  const latestVersionNo =
+    versions.length > 0 ? Math.max(...versions.map((v) => v.versionNo)) : 0;
   const displayContent = selectedVer?.content ?? prompt.content;
   const displayTitle = selectedVer?.title ?? prompt.title;
   const displayStats = selectedVer
@@ -246,7 +258,10 @@ export default function PromptDetailClient({
               }}
             >
               {prompt.parentPromptId && (
-                <span className="badge badge-fork">🔀 Fork</span>
+                <span className="badge badge-fork" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <GitFork size={12} />
+                Fork
+              </span>
               )}
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 {new Date(prompt.createdAt).toLocaleDateString("ko-KR")}
@@ -316,7 +331,8 @@ export default function PromptDetailClient({
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                🔀 Fork하기
+                <GitFork size={14} style={{ flexShrink: 0 }} />
+                Fork하기
               </button>
               <button
                 onClick={toggleScrap}
@@ -387,9 +403,9 @@ export default function PromptDetailClient({
                 >
                   버전 선택
                 </span>
-                {[...versions].reverse().map((v) => (
+                {[...versions].reverse().map((v, i) => (
                   <button
-                    key={v.id}
+                    key={`ver-${v.id}-${i}`}
                     onClick={() => selectVersion(v)}
                     style={{
                       padding: "5px 12px",
@@ -412,7 +428,7 @@ export default function PromptDetailClient({
                     }}
                   >
                     v{v.versionNo}
-                    {v.versionNo === prompt.currentVersionNo ? " 최신" : ""}
+                    {v.versionNo === latestVersionNo ? " 최신" : ""}
                   </button>
                 ))}
               </div>
@@ -515,7 +531,10 @@ export default function PromptDetailClient({
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     style={{
-                      padding: "10px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      minHeight: 44,
+                      padding: "0 16px",
                       background: "none",
                       border: "none",
                       cursor: "pointer",
@@ -533,7 +552,12 @@ export default function PromptDetailClient({
                   >
                     {tab === "versions"
                       ? `📋 버전 히스토리 (${versions.length})`
-                      : `🔀 Fork 목록 (${prompt.forkCount})`}
+                      : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <GitFork size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+                          Fork 목록 ({prompt.forkCount})
+                        </span>
+                      )}
                   </button>
                 ))}
               </div>
@@ -551,9 +575,9 @@ export default function PromptDetailClient({
                         gap: 12,
                       }}
                     >
-                      {[...versions].reverse().map((v) => (
+                      {[...versions].reverse().map((v, i) => (
                         <div
-                          key={v.id}
+                          key={`ver-tab-${v.id}-${i}`}
                           style={{
                             background: "var(--surface2)",
                             border: "1px solid var(--border)",
@@ -926,7 +950,7 @@ export default function PromptDetailClient({
                 onClick={handleFork}
                 disabled={forking}
               >
-                {forking ? "Fork 중..." : "🔀 Fork 생성"}
+                {forking ? "Fork 중..." : <><GitFork size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />Fork 생성</>}
               </button>
             </div>
           </div>

@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { title, content, description, categoryId, isPublic } =
+    const { title, content, description, categoryId, isPublic, result, modelName } =
       await request.json();
 
     if (!title || !content) {
@@ -120,6 +120,8 @@ export async function POST(request: NextRequest) {
         title,
         content,
         description: description ?? null,
+        result: result ?? null,
+        modelName: modelName ?? null,
         categoryId: categoryId ?? null,
         isPublic: isPublic ?? true,
         currentVersionNo: 1,
