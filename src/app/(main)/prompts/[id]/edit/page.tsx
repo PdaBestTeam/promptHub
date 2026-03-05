@@ -21,6 +21,7 @@ export default function EditPromptPage() {
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [changeNote, setChangeNote] = useState("");
   const [currentVersionNo, setCurrentVersionNo] = useState(1);
+  const [nextVersionNoOnSave, setNextVersionNoOnSave] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -47,6 +48,7 @@ export default function EditPromptPage() {
       setContent(pr.content);
       setCategoryId(pr.category?.id ?? "");
       setCurrentVersionNo(pr.currentVersionNo);
+      setNextVersionNoOnSave(pr.nextVersionNoOnSave ?? pr.currentVersionNo);
       setCategories(cats.data ?? []);
       setLoading(false);
     }
@@ -138,7 +140,7 @@ export default function EditPromptPage() {
             프롬프트 수정
           </h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)" }}>
-            수정 내용은 새 버전(v{currentVersionNo + 1})으로 자동 저장됩니다.
+            수정 내용은 새 버전(v{nextVersionNoOnSave})으로 자동 저장됩니다.
           </p>
         </div>
 
@@ -164,7 +166,7 @@ export default function EditPromptPage() {
             <div
               style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}
             >
-              저장 시 v{currentVersionNo + 1}로 업데이트됩니다.
+              저장 시 v{nextVersionNoOnSave}로 업데이트됩니다.
             </div>
           </div>
         </div>

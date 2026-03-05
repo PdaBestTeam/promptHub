@@ -2,18 +2,21 @@
 // src/features/prompts/components/prompt-detail/prompt-detail.client.tsx
 // Client Component: 스크랩·Fork·버전선택·복사 인터랙션 담당
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Binoculars, Heart, GitFork, ClipboardList } from "lucide-react";
 
 interface Version {
-  id: string;
+  id: number;
   versionNo: number;
   title: string;
   content: string;
   changeNote: string | null;
   createdAt: string;
+  viewCount?: number;
+  scrapCount?: number;
+  forkCount?: number;
   editor: { id: string; nickname: string };
 }
 
@@ -82,9 +85,17 @@ export default function PromptDetailClient({
       })
       .catch(() => {});
   }, [authLoading, user, initialPrompt.id]);
-  const [selectedVer, setSelectedVer] = useState<Version | null>(
-    versions[versions.length - 1] ?? null,
-  );
+  const [selectedVer, setSelectedVer] = useState<Version | null>(() => {
+    const currentId = initialPrompt.id;
+    const match = versions.find((v) => Number(v.id) === Number(currentId));
+    return match ?? versions[versions.length - 1] ?? null;
+  });
+  const selectedVerRef = useRef<Version | null>(selectedVer);
+  selectedVerRef.current = selectedVer;
+  function selectVersion(v: Version) {
+    selectedVerRef.current = v;
+    setSelectedVer(v);
+  }
   const [activeTab, setActiveTab] = useState<"forks" | "versions">("versions");
   const [showForkModal, setShowForkModal] = useState(false);
   const [forkTitle, setForkTitle] = useState("");
@@ -97,19 +108,32 @@ export default function PromptDetailClient({
   const isAuthor = user?.id === prompt.author.id;
   const displayContent = selectedVer?.content ?? prompt.content;
   const displayTitle = selectedVer?.title ?? prompt.title;
+  const displayStats = selectedVer
+    ? {
+        viewCount: selectedVer.viewCount ?? prompt.viewCount,
+        scrapCount: selectedVer.scrapCount ?? prompt.scrapCount,
+        forkCount: selectedVer.forkCount ?? prompt.forkCount,
+        versionNo: selectedVer.versionNo,
+      }
+    : {
+        viewCount: prompt.viewCount,
+        scrapCount: prompt.scrapCount,
+        forkCount: prompt.forkCount,
+        versionNo: prompt.currentVersionNo,
+      };
   const stats = [
     {
       key: "views",
       label: "조회수",
-      value: prompt.viewCount,
+      value: displayStats.viewCount,
       icon: Binoculars,
     },
-    { key: "scraps", label: "스크랩", value: prompt.scrapCount, icon: Heart },
-    { key: "forks", label: "Fork", value: prompt.forkCount, icon: GitFork },
+    { key: "scraps", label: "스크랩", value: displayStats.scrapCount, icon: Heart },
+    { key: "forks", label: "Fork", value: displayStats.forkCount, icon: GitFork },
     {
       key: "version",
       label: "버전",
-      value: `v${prompt.currentVersionNo}`,
+      value: `v${displayStats.versionNo}`,
       icon: ClipboardList,
     },
   ] as const;
@@ -137,15 +161,21 @@ export default function PromptDetailClient({
       router.push("/login");
       return;
     }
+    const current = selectedVerRef.current ?? selectedVer;
+    const forkSourceId = current?.id != null ? String(current.id) : id;
     setForking(true);
-    const res = await authFetch(`/api/prompts/${id}/fork`, {
+    const res = await authFetch(`/api/prompts/${forkSourceId}/fork`, {
       method: "POST",
-      body: JSON.stringify({ title: forkTitle || undefined }),
+      body: JSON.stringify({ draftOnly: true, title: forkTitle || undefined }),
     });
     const data = await res.json();
     setForking(false);
     setShowForkModal(false);
-    if (data.id) router.push(`/prompts/${data.id}/edit`);
+    if (data.draft && data.sourcePromptId != null) {
+      router.push(`/prompts/new?fromFork=${data.sourcePromptId}`);
+    } else if (data.id) {
+      router.push(`/prompts/${data.id}/edit`);
+    }
   }
 
   async function handleDelete() {
@@ -260,7 +290,11 @@ export default function PromptDetailClient({
             >
               <button
                 onClick={() => {
-                  const base = prompt.title.replace(/\s*\(Fork v\d+\)$/, "");
+                  const src = selectedVerRef.current ?? selectedVer;
+                  const base = (src?.title ?? prompt.title).replace(
+                    /\s*\(Fork v\d+\)$/,
+                    ""
+                  );
                   setForkTitle(`${base} (Fork v${prompt.nextForkVersionNo})`);
                   setShowForkModal(true);
                 }}
@@ -356,7 +390,7 @@ export default function PromptDetailClient({
                 {[...versions].reverse().map((v) => (
                   <button
                     key={v.id}
-                    onClick={() => setSelectedVer(v)}
+                    onClick={() => selectVersion(v)}
                     style={{
                       padding: "5px 12px",
                       borderRadius: 6,
@@ -852,7 +886,9 @@ export default function PromptDetailClient({
               }}
             >
               원본:{" "}
-              <strong style={{ color: "var(--text)" }}>{prompt.title}</strong>
+              <strong style={{ color: "var(--text)" }}>
+                {(selectedVerRef.current ?? selectedVer)?.title ?? prompt.title}
+              </strong>
               <br />이 프롬프트를 Fork하여 나만의 버전으로 개선하세요.
             </div>
             <div style={{ marginBottom: 16 }}>
@@ -873,7 +909,7 @@ export default function PromptDetailClient({
                 className="form-input"
                 value={forkTitle}
                 onChange={(e) => setForkTitle(e.target.value)}
-                placeholder={`${prompt.title.replace(/\s*\(Fork v\d+\)$/, "")} (Fork v${prompt.nextForkVersionNo})`}
+                placeholder={`${((selectedVerRef.current ?? selectedVer)?.title ?? prompt.title).replace(/\s*\(Fork v\d+\)$/, "")} (Fork v${prompt.nextForkVersionNo})`}
               />
             </div>
             <div

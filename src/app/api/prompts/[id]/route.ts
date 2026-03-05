@@ -79,7 +79,7 @@ export async function GET(
     isScrapped = !!scrap;
   }
 
-  // 다음 Fork에 붙을 버전 번호 = 트리 전체 노드 수 + 1
+  // 다음 Fork 버전 = 트리 전체 노드 수 + 1 (v1,v2,v3 있으면 다음 포크는 v4)
   let root = { id: prompt.id, parentPromptId: prompt.parentPromptId as number | null };
   while (root.parentPromptId != null) {
     const [parent] = await db
@@ -91,22 +91,33 @@ export async function GET(
     root = parent;
   }
   const rootId = root.id;
-  const visitedIds = new Set<number>([rootId]);
-  let nodeCount = 1;
-  let parentIds: number[] = [rootId];
-  while (parentIds.length > 0) {
+  const treeIds = new Set<number>([rootId]);
+  let levelIds: number[] = [rootId];
+  while (levelIds.length > 0) {
     const children = await db
       .select({ id: promptsTable.id })
       .from(promptsTable)
-      .where(and(inArray(promptsTable.parentPromptId, parentIds), ne(promptsTable.id, rootId)));
-    const newIds = children.map((c) => c.id).filter((id) => !visitedIds.has(id));
-    newIds.forEach((id) => visitedIds.add(id));
-    nodeCount += newIds.length;
-    parentIds = newIds;
+      .where(and(inArray(promptsTable.parentPromptId, levelIds), ne(promptsTable.id, rootId)));
+    const newIds = children.map((c) => c.id).filter((id) => !treeIds.has(id));
+    newIds.forEach((id) => treeIds.add(id));
+    levelIds = newIds;
   }
-  const nextForkVersionNo = nodeCount + 1;
+  const nextForkVersionNo = treeIds.size + 1;
 
-  return Response.json({ ...prompt, isScrapped, nextForkVersionNo });
+  // 저장 시 v? 표시: 실제로 한 번이라도 저장(수정)한 적이 있으면 currentVersionNo+1, 아니면 현재와 동일
+  const [{ count: versionRecordCount }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(promptVersionsTable)
+    .where(eq(promptVersionsTable.promptId, promptId));
+  const nextVersionNoOnSave =
+    (versionRecordCount ?? 0) > 1 ? prompt.currentVersionNo + 1 : prompt.currentVersionNo;
+
+  return Response.json({
+    ...prompt,
+    isScrapped,
+    nextForkVersionNo,
+    nextVersionNoOnSave,
+  });
 }
 
 // PATCH /api/prompts/:id
