@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Moon, Sun } from "lucide-react";
+import { SunMoon } from "lucide-react";
 import { useTheme } from "next-themes";
 import GenerativeAIModal from "@/components/ui/GenerativeAIModal";
 
@@ -11,7 +11,6 @@ export default function AppHeader() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   function handleLogout() {
     logout();
@@ -60,11 +59,11 @@ export default function AppHeader() {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
           className="btn-ghost"
-          onClick={() => setTheme(isDark ? "light" : "dark")}
-          aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          aria-label="테마 전환"
           style={{ padding: "6px 10px" }}
         >
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          <SunMoon size={16} />
         </button>
         {user ? (
           <>
