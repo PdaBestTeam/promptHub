@@ -25,6 +25,7 @@ export async function GET(
       title: promptsTable.title,
       content: promptsTable.content,
       description: promptsTable.description,
+      result: promptsTable.result,
       isPublic: promptsTable.isPublic,
       currentVersionNo: promptsTable.currentVersionNo,
       viewCount: promptsTable.viewCount,
