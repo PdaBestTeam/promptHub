@@ -1,60 +1,111 @@
-name: Deploy to EC2 (Blue/Green)
+name: Deploy to Production (Blue/Green)
 
+# ── 트리거: prod 브랜치 push 시에만 실행 ─────────────────────────────────────
 on:
   push:
-    branches: ["prod"]
+    branches:
+      - prod
+
+env:
+  REGISTRY: ghcr.io
+  EC2_USER: ubuntu
+  DEPLOY_DIR: /home/ubuntu/deploy
+  APP_DIR: /home/ubuntu/app
 
 jobs:
   deploy:
+    name: Build → Push → Deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write   # GHCR push 권한
 
     steps:
-      - uses: actions/checkout@v4
+      # ── 1. 소스 체크아웃 ──────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Login to GHCR
+      # ── 1-1. 소문자 이미지 이름 계산 (GHCR은 소문자만 허용) ─────────────
+      - name: Set lowercase image name
+        run: |
+          IMAGE_NAME=$(echo "${{ github.repository }}/prompthub" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+
+      # ── 2. GHCR 로그인 ────────────────────────────────────────────────────
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push image
-        uses: docker/build-push-action@v6
+      # ── 3. Docker 메타데이터 (태그/라벨 자동 생성) ───────────────────────
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+
+      # ── 4. Docker 빌드 & GHCR push ───────────────────────────────────────
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}/prompthub:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 빌드 캐시 활용 (선택)
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
-      - name: Copy deploy script to EC2
+      # ── 5. deploy 스크립트를 EC2에 SCP 업로드 ───────────────────────────
+      - name: Upload bg-deploy.sh to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deploy/bg-deploy.sh"
-          target: "/home/ubuntu/deploy"
+          source: deploy/bg-deploy.sh
+          target: ${{ env.DEPLOY_DIR }}
+          # 업로드 후 디렉터리 구조 유지: DEPLOY_DIR/deploy/bg-deploy.sh
+          strip_components: 1
 
-      - name: Run deploy on EC2
+      # ── 6. SSH: .env.production 생성 → 이미지 pull → 배포 실행 ──────────
+      - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          # 타임아웃 (초)
+          command_timeout: 300s
           script: |
-            set -e
-            mkdir -p /home/ubuntu/app
+            set -euo pipefail
 
-            cat > /home/ubuntu/app/.env.production << 'EOF'
+            # ── .env.production 생성 ──────────────────────────────────────
+            mkdir -p ${{ env.APP_DIR }}
+            # GitHub Secret(ENV_PRODUCTION)의 멀티라인 내용을 파일로 기록
+            cat > ${{ env.APP_DIR }}/.env.production <<'ENVEOF'
             ${{ secrets.ENV_PRODUCTION }}
-            EOF
-            chmod 600 /home/ubuntu/app/.env.production
+            ENVEOF
+            chmod 600 ${{ env.APP_DIR }}/.env.production
+            echo "[INFO] .env.production 생성 완료"
 
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/${{ github.repository }}/prompthub:latest
-            docker tag ghcr.io/${{ github.repository }}/prompthub:latest prompthub:latest
+            # ── GHCR 로그인 (EC2에서 pull 권한 필요) ───────────────────────
+            echo "${{ secrets.GITHUB_TOKEN }}" | \
+              docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            chmod +x /home/ubuntu/deploy/bg-deploy.sh
-            /home/ubuntu/deploy/bg-deploy.sh
+            # ── 이미지 pull ────────────────────────────────────────────────
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+            docker pull "$IMAGE"
+            echo "[INFO] 이미지 pull 완료: $IMAGE"
+
+            # ── bg-deploy.sh 실행 권한 부여 및 실행 ────────────────────────
+            chmod +x ${{ env.DEPLOY_DIR }}/bg-deploy.sh
+            ${{ env.DEPLOY_DIR }}/bg-deploy.sh "$IMAGE"
+
+            # ── 사용하지 않는 이미지 정리 (선택) ──────────────────────────
+            docker image prune -f || true
