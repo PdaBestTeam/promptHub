@@ -29,7 +29,7 @@ export default async function PromptList({ q = "", category = "", sort = "latest
   // Fetch prompts (public, no auth token needed for initial SSR)
   const [promptsRes, catsRes] = await Promise.all([
     fetch(`${baseUrl}/api/prompts?${params}`, { cache: "no-store" }),
-    fetch(`${baseUrl}/api/categories`, { cache: "force-cache" }),
+    fetch(`${baseUrl}/api/categories`, { cache: "no-store" }),
   ]);
 
   const promptsData = await promptsRes.json();

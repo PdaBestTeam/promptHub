@@ -38,31 +38,43 @@ interface Props {
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
+  // 기존
   illustration: "🎨",
   development: "💻",
   "problem-solving": "💬",
   travel: "✈️",
+  // 추가
+  writing: "✏️",
+  education: "📚",
+  marketing: "📢",
+  research: "🔬",
+  work: "💼",
+  contents: "🎬",
+  etc: "📦",
+  fun: "🎉",
+  life: "🏠",
 };
-<<<<<<< Updated upstream
-=======
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  illustration:
-    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  development:
-    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  "problem-solving":
-    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
-  travel:
-    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  default:
-    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  illustration: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  development: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  "problem-solving": "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
+  travel: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  default: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
 };
->>>>>>> Stashed changes
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
   development: "코딩·기술",
   "problem-solving": "고민·상담",
   travel: "여행·탐방",
+  writing: "글쓰기·창작",
+  education: "학습·강의",
+  marketing: "홍보·마케팅",
+  research: "조사·분석",
+  work: "업무·생산성",
+  contents: "영상·콘텐츠",
+  etc: "기타",
+  fun: "재미·유머",
+  life: "일상·생활",
   "": "모든 프롬프트",
 };
 const BG_COLORS: Record<string, string> = {
@@ -269,27 +281,27 @@ export default function PromptListClient({
         </select>
       </div>
 
-      {/* Category Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${allCategories.length}, 1fr)`,
-          gap: 10,
-          marginBottom: 24,
-        }}
-      >
+      {/* Category Cards — 우측 페이드로 스크롤 가능 암시 */}
+      <div style={{ position: "relative", marginBottom: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            overflowX: "auto",
+            paddingTop: 4,
+            paddingBottom: 6,
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--border) transparent",
+          } as React.CSSProperties}
+        >
+
         {allCategories.map((cat) => {
           const catKey = resolveCategoryKey(cat.slug, cat.name);
           const isActive = category === cat.slug;
-<<<<<<< Updated upstream
           const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
           const desc = CATEGORY_DESCS[catKey] ?? "";
-=======
-          const gradient =
-            CATEGORY_GRADIENTS[cat.slug] ?? CATEGORY_GRADIENTS.default;
-          const emoji = CATEGORY_EMOJIS[cat.slug] ?? "✨";
-          const desc = CATEGORY_DESCS[cat.slug] ?? "";
->>>>>>> Stashed changes
           return (
             <button
               key={cat.id}
@@ -297,6 +309,10 @@ export default function PromptListClient({
                 handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
               }
               style={{
+                flexShrink: 0,
+                width: "calc((100% - 40px) / 5)",
+                minWidth: 100,
+                scrollSnapAlign: "start",
                 position: "relative",
                 padding: "14px 12px 12px",
                 borderRadius: 14,
@@ -381,6 +397,19 @@ export default function PromptListClient({
             </button>
           );
         })}
+        </div>
+        {/* 우측 그라데이션 페이드 — 더 스크롤 가능함을 암시 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 60,
+            height: "calc(100% - 6px)",
+            background: "linear-gradient(to right, transparent, var(--bg))",
+            pointerEvents: "none",
+          }}
+        />
       </div>
 
       <div
