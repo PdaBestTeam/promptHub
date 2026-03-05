@@ -140,7 +140,7 @@ export default function EditPromptPage() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(4px)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: 28, maxWidth: 400, width: "100%", margin: 20 }}>
             <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 12 }}>정말 삭제하시겠어요?</div>
-            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없으며, 모든 버전과 Fork 정보가 삭제됩니다.</div>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없으며, 모든 버전 기록이 함께 삭제됩니다. Fork된 게시글은 유지됩니다.</div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowDeleteModal(false)}>취소</button>
               <button className="btn-danger" onClick={handleDelete} disabled={deleting}>{deleting ? "삭제 중..." : "🗑 삭제"}</button>

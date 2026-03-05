@@ -61,8 +61,8 @@ export async function POST(
     nodeCount += newIds.length;
     parentIds = newIds;
   }
-  // 이번에 만들 포크가 트리에서 nodeCount번째 → v{nodeCount} 수정중, 저장 시 v{nodeCount+1}
-  const forkVersionNo = nodeCount;
+  // 새 포크는 트리의 (nodeCount+1)번째 노드
+  const forkVersionNo = nodeCount + 1;
 
   const [forked] = await db
     .insert(promptsTable)

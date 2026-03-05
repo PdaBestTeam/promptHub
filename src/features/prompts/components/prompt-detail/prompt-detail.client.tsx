@@ -30,6 +30,7 @@ interface PromptDetailData {
   parentPromptId: string | null;
   createdAt: string;
   isScrapped: boolean;
+  nextForkVersionNo: number;
   category: { id: number; name: string; slug: string } | null;
   author: { id: string; nickname: string; avatarUrl: string | null };
 }
@@ -150,7 +151,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             {/* Actions */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
               <button
-                onClick={() => { setForkTitle(`${prompt.title} (Fork v${prompt.currentVersionNo})`); setShowForkModal(true); }}
+                onClick={() => { setForkTitle(`${prompt.title} (Fork v${prompt.nextForkVersionNo})`); setShowForkModal(true); }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "opacity .15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
@@ -265,7 +266,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(4px)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowDeleteModal(false)}>
           <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: 28, maxWidth: 400, width: "100%", margin: 20 }} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 12 }}>정말 삭제하시겠어요?</div>
-            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없으며, 모든 버전과 Fork 정보가 삭제됩니다.</div>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없으며, 모든 버전 기록이 함께 삭제됩니다. Fork된 게시글은 유지됩니다.</div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowDeleteModal(false)}>취소</button>
               <button className="btn-danger" onClick={handleDelete} disabled={deleting}>{deleting ? "삭제 중..." : "🗑 삭제"}</button>
@@ -287,7 +288,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 6 }}>Fork 제목</label>
-              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork v${prompt.currentVersionNo})`} />
+              <input className="form-input" value={forkTitle} onChange={(e) => setForkTitle(e.target.value)} placeholder={`${prompt.title} (Fork v${prompt.nextForkVersionNo})`} />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowForkModal(false)}>취소</button>
