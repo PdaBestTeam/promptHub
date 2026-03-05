@@ -43,9 +43,19 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
   const router = useRouter();
   const { user, authFetch, loading: authLoading } = useAuth();
 
-  const [prompt, setPrompt] = useState<PromptDetailData>(initialPrompt);
+  const [prompt, setPrompt] = useState<PromptDetailData>(() => {
+    // 목록에서 넘어올 때 저장해 둔 스크랩 상태가 있으면 즉시 반영
+    if (typeof window === "undefined") return initialPrompt;
+    const saved = sessionStorage.getItem(`prompt-scrap-${initialPrompt.id}`);
+    if (saved !== null) {
+      const isScrapped = saved === "true";
+      const delta = (isScrapped ? 1 : 0) - (initialPrompt.isScrapped ? 1 : 0);
+      return { ...initialPrompt, isScrapped, scrapCount: Math.max(0, initialPrompt.scrapCount + delta) };
+    }
+    return initialPrompt;
+  });
 
-  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화
+  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화 (id 바뀔 때마다 재조회)
   useEffect(() => {
     if (authLoading || !user) return;
     authFetch(`/api/prompts/${initialPrompt.id}`)
@@ -56,7 +66,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
         }
       })
       .catch(() => {});
-  }, [authLoading, user]);
+  }, [authLoading, user, initialPrompt.id]);
   const [selectedVer, setSelectedVer] = useState<Version | null>(versions[versions.length - 1] ?? null);
   const [activeTab, setActiveTab] = useState<"forks" | "versions">("versions");
   const [showForkModal, setShowForkModal] = useState(false);
