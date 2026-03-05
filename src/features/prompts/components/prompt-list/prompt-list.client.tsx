@@ -18,6 +18,7 @@ interface Prompt {
   id: string;
   title: string;
   description: string | null;
+  modelName: string | null;
   currentVersionNo: number;
   viewCount: number;
   scrapCount: number;
@@ -85,6 +86,78 @@ const BG_COLORS: Record<string, string> = {
   travel: "#eef3fb",
   default: "#f0eeeb",
 };
+
+// AI 유형별 배지: 투명한 파스텔 배경 + 카드와 어울리는 진한 텍스트
+const MODEL_BADGE_STYLES: Record<
+  string,
+  { bg: string; border: string; text: string }
+> = {
+  chatgpt: {
+    bg: "rgba(150, 190, 160, 0.55)",
+    border: "rgba(100, 140, 110, 0.35)",
+    text: "rgb(55, 95, 65)",
+  },
+  claude: {
+    bg: "rgba(210, 165, 130, 0.55)",
+    border: "rgba(160, 115, 85, 0.35)",
+    text: "rgb(120, 75, 50)",
+  },
+  gemini: {
+    bg: "rgba(150, 175, 210, 0.55)",
+    border: "rgba(100, 125, 165, 0.35)",
+    text: "rgb(55, 80, 120)",
+  },
+  perplexity: {
+    bg: "rgba(130, 175, 190, 0.55)",
+    border: "rgba(85, 130, 150, 0.35)",
+    text: "rgb(45, 85, 105)",
+  },
+  midjourney: {
+    bg: "rgba(175, 140, 195, 0.55)",
+    border: "rgba(125, 90, 150, 0.35)",
+    text: "rgb(85, 55, 115)",
+  },
+  "dall-e 3": {
+    bg: "rgba(140, 180, 200, 0.55)",
+    border: "rgba(95, 140, 165, 0.35)",
+    text: "rgb(50, 95, 120)",
+  },
+  "dall-e": {
+    bg: "rgba(140, 180, 200, 0.55)",
+    border: "rgba(95, 140, 165, 0.35)",
+    text: "rgb(50, 95, 120)",
+  },
+  "stable diffusion": {
+    bg: "rgba(160, 155, 190, 0.55)",
+    border: "rgba(115, 110, 150, 0.35)",
+    text: "rgb(75, 70, 110)",
+  },
+  copilot: {
+    bg: "rgba(140, 165, 200, 0.55)",
+    border: "rgba(95, 120, 160, 0.35)",
+    text: "rgb(55, 80, 120)",
+  },
+  "notion ai": {
+    bg: "rgba(130, 130, 135, 0.55)",
+    border: "rgba(95, 95, 100, 0.35)",
+    text: "rgb(60, 60, 65)",
+  },
+};
+const DEFAULT_BADGE = {
+  bg: "rgba(130, 140, 155, 0.55)",
+  border: "rgba(95, 105, 120, 0.35)",
+  text: "rgb(65, 75, 90)",
+};
+function getModelBadgeStyle(
+  modelName: string
+): { bg: string; border: string; text: string } {
+  const key = modelName.trim().toLowerCase().replace(/\s+/g, " ");
+  return (
+    MODEL_BADGE_STYLES[key] ??
+    MODEL_BADGE_STYLES[key.replace(/\s*\d+$/, "").trim()] ??
+    DEFAULT_BADGE
+  );
+}
 
 function resolveCategoryKey(slug?: string | null, name?: string | null): string {
   const s = (slug ?? "").trim().toLowerCase();
@@ -492,6 +565,29 @@ export default function PromptListClient({
                     background: bg,
                   }}
                 >
+                  {prompt.modelName && (() => {
+                    const { bg, border, text } = getModelBadgeStyle(prompt.modelName);
+                    return (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: 9,
+                          left: 9,
+                          padding: "4px 9px",
+                          borderRadius: 20,
+                          background: bg,
+                          border: `1px solid ${border}`,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: text,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {prompt.modelName}
+                      </span>
+                    );
+                  })()}
                   <span style={{ fontSize: 44, lineHeight: 1 }}>{emoji}</span>
                   {prompt.parentPromptId && (
                     <span

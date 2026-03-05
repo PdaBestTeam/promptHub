@@ -133,13 +133,16 @@ export default function GenerativeAIModal() {
             top: "100%",
             left: 0,
             marginTop: 6,
-            width: 320,
+            width: "min(320px, calc(100vw - 24px))",
             background: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: 14,
             padding: "8px 0",
             boxShadow: "0 12px 40px rgba(0,0,0,.15)",
             zIndex: 500,
+            maxHeight: "min(68vh, 560px)",
+            overflowY: "auto",
+            overscrollBehavior: "contain",
           }}
         >
           {GROUP_1.map((item) => (
