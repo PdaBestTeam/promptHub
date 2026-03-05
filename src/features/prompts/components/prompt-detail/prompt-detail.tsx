@@ -75,5 +75,29 @@ export default async function PromptDetail({ id }: { id: string }) {
     .where(eq(promptVersionsTable.promptId, promptId))
     .orderBy(asc(promptVersionsTable.versionNo));
 
-  return <PromptDetailClient prompt={{ ...prompt, isScrapped: false }} versions={versions ?? []} />;
+  return (
+    <PromptDetailClient
+      prompt={{
+        id: String(prompt.id),
+        title: prompt.title,
+        content: prompt.content,
+        description: prompt.description,
+        isPublic: prompt.isPublic,
+        currentVersionNo: prompt.currentVersionNo,
+        viewCount: prompt.viewCount,
+        scrapCount: prompt.scrapCount,
+        forkCount: prompt.forkCount,
+        parentPromptId: prompt.parentPromptId != null ? String(prompt.parentPromptId) : null,
+        createdAt: prompt.createdAt instanceof Date ? prompt.createdAt.toISOString() : String(prompt.createdAt),
+        isScrapped: false,
+        category: prompt.category,
+        author: prompt.author,
+      }}
+      versions={versions.map((v) => ({
+        ...v,
+        id: String(v.id),
+        createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
+      }))}
+    />
+  );
 }

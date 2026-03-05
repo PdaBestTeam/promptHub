@@ -84,7 +84,13 @@ export default async function PromptList({ q = "", category = "", sort = "latest
     .from(categoriesTable)
     .orderBy(categoriesTable.id);
 
-  const data = rows.map((r) => ({ ...r, isScrapped: false }));
+  const data = rows.map((r) => ({
+    ...r,
+    id: String(r.id),
+    parentPromptId: r.parentPromptId != null ? String(r.parentPromptId) : null,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    isScrapped: false,
+  }));
 
   return (
     <PromptListClient
