@@ -174,7 +174,7 @@ export default function PromptDetailClient({
       return;
     }
     const current = selectedVerRef.current ?? selectedVer;
-    const forkSourceId = current?.id != null ? String(current.id) : id;
+    const forkSourceId = id;
     setForking(true);
     const res = await authFetch(`/api/prompts/${forkSourceId}/fork`, {
       method: "POST",
