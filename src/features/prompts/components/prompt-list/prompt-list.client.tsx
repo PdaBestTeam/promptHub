@@ -2,7 +2,8 @@
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
 // Client Component: 검색·필터·스크랩 인터랙션 담당
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -589,6 +590,40 @@ export default function PromptListClient({
           </button>
         </div>
       )}
+
+      <Link
+        href="/about"
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 100,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "8px 14px",
+          borderRadius: 8,
+          border: "1px solid var(--border)",
+          background: "var(--surface)",
+          color: "var(--text-dim)",
+          fontSize: 13,
+          fontWeight: 500,
+          textDecoration: "none",
+          fontFamily: "inherit",
+          transition: "all .15s",
+          boxShadow: "0 4px 20px rgba(0,0,0,.12)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "var(--border-hover)";
+          e.currentTarget.style.color = "var(--text)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "var(--border)";
+          e.currentTarget.style.color = "var(--text-dim)";
+        }}
+      >
+        📖 사용법 가이드
+      </Link>
     </div>
   );
 }

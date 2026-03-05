@@ -57,11 +57,14 @@ export async function GET(
     return forbidden();
   }
 
-  // Increment view count
-  await db
-    .update(promptsTable)
-    .set({ viewCount: sql`${promptsTable.viewCount} + 1` })
-    .where(eq(promptsTable.id, promptId));
+  // 조회수 증가: 클라이언트의 스크랩/결과 동기화 요청(X-Skip-View-Count)이 아닐 때만 (서버 초기 로드 1회만 카운트)
+  const skipViewCount = request.headers.get("X-Skip-View-Count") === "true";
+  if (!skipViewCount) {
+    await db
+      .update(promptsTable)
+      .set({ viewCount: sql`${promptsTable.viewCount} + 1` })
+      .where(eq(promptsTable.id, promptId));
+  }
 
   // Check if user scrapped this
   let isScrapped = false;

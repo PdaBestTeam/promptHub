@@ -64,10 +64,12 @@ export default function PromptDetailClient({
     return initialPrompt;
   });
 
-  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화 (id 바뀔 때마다 재조회)
+  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화 (id 바뀔 때마다 재조회, 조회수 미증가)
   useEffect(() => {
     if (authLoading || !user) return;
-    authFetch(`/api/prompts/${initialPrompt.id}`)
+    authFetch(`/api/prompts/${initialPrompt.id}`, {
+      headers: { "X-Skip-View-Count": "true" },
+    })
       .then((r) => r.json())
       .then((data) => {
         if (data.isScrapped !== undefined || data.result !== undefined) {
