@@ -5,7 +5,7 @@ import {
   promptVersionsTable,
 } from "@/lib/db/schema";
 import { getAuthUser, unauthorized, notFound } from "@/lib/http/auth-middleware";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 // POST /api/prompts/:id/fork
 export async function POST(
@@ -29,7 +29,41 @@ export async function POST(
   const body = await request.json().catch(() => ({}));
   const title = body.title ?? `${source.title} (Fork)`;
 
-  // Create forked prompt
+  // 루트(원본 A) 찾기
+  let root = source;
+  while (root.parentPromptId != null) {
+    const [parent] = await db
+      .select()
+      .from(promptsTable)
+      .where(eq(promptsTable.id, root.parentPromptId))
+      .limit(1);
+    if (!parent) break;
+    root = parent;
+  }
+  const rootId = root.id;
+
+  // A 트리 내 노드 수 = 이번 포크의 버전 번호 (1번째 포크→v1, 2번째→v2, 3번째→v3 …)
+  const visitedIds = new Set<number>([rootId]);
+  let nodeCount = 1;
+  let parentIds: number[] = [rootId];
+  while (parentIds.length > 0) {
+    const children = await db
+      .select({ id: promptsTable.id })
+      .from(promptsTable)
+      .where(
+        and(
+          inArray(promptsTable.parentPromptId, parentIds),
+          ne(promptsTable.id, rootId)
+        )
+      );
+    const newIds = children.map((c) => c.id).filter((id) => !visitedIds.has(id));
+    newIds.forEach((id) => visitedIds.add(id));
+    nodeCount += newIds.length;
+    parentIds = newIds;
+  }
+  // 이번에 만들 포크가 트리에서 nodeCount번째 → v{nodeCount} 수정중, 저장 시 v{nodeCount+1}
+  const forkVersionNo = nodeCount;
+
   const [forked] = await db
     .insert(promptsTable)
     .values({
@@ -41,14 +75,13 @@ export async function POST(
       isPublic: true,
       parentPromptId: source.id,
       forkedFromVersionId: body.fromVersionId ?? null,
-      currentVersionNo: 1,
+      currentVersionNo: forkVersionNo,
     })
     .returning();
 
-  // Create v1 for forked prompt
   await db.insert(promptVersionsTable).values({
     promptId: forked.id,
-    versionNo: 1,
+    versionNo: forkVersionNo,
     title: forked.title,
     content: forked.content,
     changeNote: `"${source.title}"에서 Fork`,

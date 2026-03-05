@@ -85,7 +85,7 @@ export default function PromptDetailClient({ prompt: initialPrompt, versions }: 
     const data = await res.json();
     setForking(false);
     setShowForkModal(false);
-    if (data.id) router.push(`/prompts/${data.id}`);
+    if (data.id) router.push(`/prompts/${data.id}/edit`);
   }
 
   function copyPrompt() {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
+import GenerativeAIModal from "@/components/ui/GenerativeAIModal";
 
 export default function AppHeader() {
   const { user, logout } = useAuth();
@@ -55,6 +56,7 @@ export default function AppHeader() {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {user ? (
           <>
+            <GenerativeAIModal />
             <button className="btn-primary" onClick={() => router.push("/prompts/new")}>
               + 프롬프트 등록
             </button>
