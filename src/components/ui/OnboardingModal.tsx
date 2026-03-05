@@ -1,7 +1,8 @@
 "use client";
 // src/components/ui/OnboardingModal.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const STORAGE_KEY = "ph_onboarded";
 
@@ -27,14 +28,10 @@ const slides = [
 ];
 
 export default function OnboardingModal() {
-  const [visible, setVisible] = useState(false);
+  const router = useRouter();
+  const [visible, setVisible] = useState(() => !localStorage.getItem(STORAGE_KEY));
   const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
-
-  useEffect(() => {
-    const done = localStorage.getItem(STORAGE_KEY);
-    if (!done) setVisible(true);
-  }, []);
 
   function handleClose() {
     setExiting(true);
@@ -53,6 +50,12 @@ export default function OnboardingModal() {
     }
   }
 
+  function handleGoAbout() {
+    localStorage.setItem(STORAGE_KEY, "1");
+    setVisible(false);
+    router.push("/about");
+  }
+
   if (!visible) return null;
 
   const s = slides[step];
@@ -68,7 +71,9 @@ export default function OnboardingModal() {
         justifyContent: "center",
         background: "rgba(0,0,0,0.6)",
         backdropFilter: "blur(6px)",
-        animation: exiting ? "pgOut .3s ease forwards" : "pgIn .3s ease forwards",
+        animation: exiting
+          ? "pgOut .3s ease forwards"
+          : "pgIn .3s ease forwards",
       }}
       onClick={handleClose}
     >
@@ -82,7 +87,9 @@ export default function OnboardingModal() {
           width: "calc(100% - 40px)",
           overflow: "hidden",
           boxShadow: "0 40px 100px rgba(0,0,0,0.5)",
-          animation: exiting ? "slideDown .3s ease forwards" : "slideUp .3s ease forwards",
+          animation: exiting
+            ? "slideDown .3s ease forwards"
+            : "slideUp .3s ease forwards",
         }}
       >
         {/* Hero area */}
@@ -97,7 +104,12 @@ export default function OnboardingModal() {
             transition: "background 0.4s ease",
           }}
         >
-          <span style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.2))", animation: "heroFloat 2.5s ease-in-out infinite" }}>
+          <span
+            style={{
+              filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.2))",
+              animation: "heroFloat 2.5s ease-in-out infinite",
+            }}
+          >
             {s.emoji}
           </span>
         </div>
@@ -129,7 +141,14 @@ export default function OnboardingModal() {
           </p>
 
           {/* Step dots */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 24,
+            }}
+          >
             {slides.map((_, i) => (
               <button
                 key={i}
@@ -150,6 +169,13 @@ export default function OnboardingModal() {
 
           {/* Buttons */}
           <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={handleGoAbout}
+              className="btn-ghost"
+              style={{ flex: 1, padding: "12px 0", fontSize: 14 }}
+            >
+              소개 보기
+            </button>
             <button
               onClick={handleClose}
               className="btn-ghost"

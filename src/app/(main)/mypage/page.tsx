@@ -37,17 +37,20 @@ interface UserInfo {
 
 export default function MypagePage() {
   const router = useRouter();
-  const { user, authFetch, logout } = useAuth();
+  const { user, authFetch, logout, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<"written" | "scraps" | "profile">("written");
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
   const [scraps, setScraps] = useState<ScrapItem[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [nickname, setNickname] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     async function load() {
       const [info, mp, sc] = await Promise.all([
@@ -62,7 +65,16 @@ export default function MypagePage() {
       setLoading(false);
     }
     load();
-  }, [user]);
+  }, [authLoading, user]);
+
+  async function handleDelete() {
+    if (!deleteTargetId) return;
+    setDeleting(true);
+    await authFetch(`/api/prompts/${deleteTargetId}`, { method: "DELETE" });
+    setMyPrompts((prev) => prev.filter((p) => p.id !== deleteTargetId));
+    setDeleteTargetId(null);
+    setDeleting(false);
+  }
 
   async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
@@ -88,7 +100,7 @@ export default function MypagePage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: "-.5px", color: "var(--text)", marginBottom: 4 }}>{userInfo?.nickname}</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
-              {userInfo?.email} · 가입 {userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit" }) : ""}
+              {userInfo?.email} · 가입 {userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }) : ""}
             </div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[["프롬프트", userInfo?.promptCount ?? 0], ["스크랩한 글", userInfo?.scrapCount ?? 0]].map(([label, num]) => (
@@ -143,11 +155,11 @@ export default function MypagePage() {
                       <span>v{p.currentVersionNo}</span>
                       <span>♡ {p.scrapCount}</span>
                       <span>🔀 {p.forkCount}</span>
-                      <span>{p.isPublic ? "공개" : "비공개"}</span>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={(e) => { e.stopPropagation(); router.push(`/prompts/${p.id}/edit`); }} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border)", background: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
+                    <button onClick={(e) => { e.stopPropagation(); setDeleteTargetId(p.id); }} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--red-border)", background: "none", color: "var(--red)", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>🗑</button>
                   </div>
                 </div>
               ))
@@ -217,6 +229,19 @@ export default function MypagePage() {
           </div>
         )}
       </div>
+
+      {deleteTargetId && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(4px)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setDeleteTargetId(null)}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: 28, maxWidth: 400, width: "100%", margin: 20 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 12 }}>정말 삭제하시겠어요?</div>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 24 }}>이 작업은 되돌릴 수 없습니다.</div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn-ghost" onClick={() => setDeleteTargetId(null)}>취소</button>
+              <button className="btn-danger" onClick={handleDelete} disabled={deleting}>{deleting ? "삭제 중..." : "🗑 삭제"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

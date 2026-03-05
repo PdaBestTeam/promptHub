@@ -8,7 +8,7 @@ import {
   scrapsTable,
 } from "@/lib/db/schema";
 import { getAuthUser, forbidden, notFound } from "@/lib/http/auth-middleware";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 // GET /api/prompts/:id
 export async function GET(
@@ -75,7 +75,34 @@ export async function GET(
     isScrapped = !!scrap;
   }
 
-  return Response.json({ ...prompt, isScrapped });
+  // 다음 Fork에 붙을 버전 번호 = 트리 전체 노드 수 + 1
+  let root = { id: prompt.id, parentPromptId: prompt.parentPromptId as number | null };
+  while (root.parentPromptId != null) {
+    const [parent] = await db
+      .select({ id: promptsTable.id, parentPromptId: promptsTable.parentPromptId })
+      .from(promptsTable)
+      .where(eq(promptsTable.id, root.parentPromptId))
+      .limit(1);
+    if (!parent) break;
+    root = parent;
+  }
+  const rootId = root.id;
+  const visitedIds = new Set<number>([rootId]);
+  let nodeCount = 1;
+  let parentIds: number[] = [rootId];
+  while (parentIds.length > 0) {
+    const children = await db
+      .select({ id: promptsTable.id })
+      .from(promptsTable)
+      .where(and(inArray(promptsTable.parentPromptId, parentIds), ne(promptsTable.id, rootId)));
+    const newIds = children.map((c) => c.id).filter((id) => !visitedIds.has(id));
+    newIds.forEach((id) => visitedIds.add(id));
+    nodeCount += newIds.length;
+    parentIds = newIds;
+  }
+  const nextForkVersionNo = nodeCount + 1;
+
+  return Response.json({ ...prompt, isScrapped, nextForkVersionNo });
 }
 
 // PATCH /api/prompts/:id
