@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       id: promptsTable.id,
       title: promptsTable.title,
       description: promptsTable.description,
+      modelName: promptsTable.modelName,
       currentVersionNo: promptsTable.currentVersionNo,
       viewCount: promptsTable.viewCount,
       scrapCount: promptsTable.scrapCount,
