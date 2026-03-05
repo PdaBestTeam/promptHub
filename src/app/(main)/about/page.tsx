@@ -1,223 +1,687 @@
 "use client";
 
-type Section = {
-  id: string;
-  title: string;
-  body: string[];
-  bullets?: string[];
-};
-
-const sections: Section[] = [
+const versions = [
+  { v: "v1", text: "친절한 톤으로 설명해줘", note: "초안" },
   {
-    id: "intro",
-    title: "PromptHub란?",
-    body: [
-      "최근 ChatGPT, Claude, Gemini와 같은 생성형 AI 서비스의 사용이 빠르게 증가하면서, 좋은 프롬프트(prompt)를 찾고 이를 자신의 상황에 맞게 수정하여 활용하려는 수요도 함께 늘어나고 있습니다.",
-      "하지만 실제로는 프롬프트가 여러 웹사이트와 커뮤니티에 흩어져 있어 찾기 어렵고, 복사해서 사용하다 보면 원본을 알기 어렵고, 여러 번 수정하다 보면 어떤 버전이 가장 좋은지 관리하기 어렵습니다.",
-      "PromptHub는 이러한 문제를 해결하기 위해 만들어진 프롬프트 공유 및 버전 관리 플랫폼입니다.",
-      "사용자는 PromptHub에서 다양한 프롬프트를 탐색하고, 마음에 드는 프롬프트를 Fork하여 자신의 버전으로 수정하고 발전시킬 수 있습니다. 또한 프롬프트의 수정 과정은 버전 히스토리로 관리되어 어떤 과정으로 발전했는지 쉽게 확인할 수 있습니다.",
-      "PromptHub는 단순히 프롬프트를 저장하는 공간이 아니라, 프롬프트를 공유하고 발전시키는 협업 공간을 목표로 합니다.",
-    ],
+    v: "v2",
+    text: "중학생도 이해할 수 있도록 예시를 포함해서 설명해줘",
+    note: "개선",
   },
   {
-    id: "why",
-    title: "왜 PromptHub가 필요한가?",
-    body: [
-      "프롬프트는 일반적인 글이나 게시물과 달리 계속 수정되고 발전하는 데이터입니다.",
-      "예를 들어 하나의 프롬프트는 다음처럼 발전할 수 있습니다.",
-    ],
-    bullets: [
-      'v1: "친절한 톤으로 설명해줘"',
-      'v2: "중학생도 이해할 수 있도록 예시를 포함해서 설명해줘"',
-      'v3: "표와 예시를 함께 사용해서 단계별로 설명해줘"',
-      "기존 방식에서는 수정할 때마다 이전 버전이 사라지고, 변경 기록이 남지 않으며, 다른 사람의 개선 내용을 활용하기 어렵습니다.",
-      "PromptHub는 이러한 문제를 해결하기 위해 Git과 유사한 방식의 버전 관리 개념을 프롬프트에 적용했습니다.",
-    ],
-  },
-  {
-    id: "features",
-    title: "주요 기능",
-    body: [
-      "PromptHub에서는 카테고리 탐색(일러스트, 개발, 고민해결, 여행 등), 검색, 정렬 기능을 통해 원하는 프롬프트를 쉽게 찾을 수 있습니다.",
-      "프롬프트 목록은 카드 형태로 표시되며 최신순, 조회순, 스크랩순, Fork순으로 정렬할 수 있습니다. 카드를 클릭하면 상세 페이지에서 더 많은 정보를 확인할 수 있습니다.",
-      "핵심 기능은 Fork와 버전 히스토리입니다. 다른 사람이 만든 프롬프트를 Fork해 내 프롬프트로 복사한 뒤 수정할 때마다 버전 번호가 자동으로 증가합니다.",
-      "버전 히스토리에서는 어떤 프롬프트에서 시작되었는지, 어떤 과정으로 수정되었는지, 이전 버전의 내용을 확인할 수 있어 발전 과정을 체계적으로 관리할 수 있습니다.",
-      "또한 PromptHub에서 복사한 프롬프트를 ChatGPT, Claude, Gemini 같은 생성형 AI 서비스에서 바로 활용할 수 있습니다.",
-      "마음에 드는 프롬프트는 스크랩해 마이페이지에서 다시 확인할 수 있고, 직접 작성한 프롬프트를 등록해 다른 사용자와 공유할 수도 있습니다.",
-      "마이페이지에서는 내가 작성한 프롬프트, 스크랩한 프롬프트, 계정 정보를 한 곳에서 관리할 수 있습니다.",
-    ],
-  },
-  {
-    id: "goal",
-    title: "PromptHub의 목표",
-    body: [
-      "PromptHub의 목표는 단순한 프롬프트 저장 서비스가 아니라, 프롬프트를 공유하고 발전시키는 플랫폼이 되는 것입니다.",
-      "사용자들이 만든 프롬프트가 다른 사용자에게 영감을 주고, Fork와 수정 과정을 통해 더 좋은 프롬프트로 발전하는 생태계를 만드는 것이 궁극적인 목표입니다.",
-    ],
+    v: "v3",
+    text: "표와 예시를 함께 사용해서 단계별로 설명해줘",
+    note: "완성",
   },
 ];
 
 export default function AboutPage() {
   return (
     <main
-      style={{
-        paddingTop: 60,
-        background:
-          "radial-gradient(circle at 10% 10%, var(--accent-dim), transparent 36%), radial-gradient(circle at 90% 20%, var(--green-dim), transparent 28%), var(--bg)",
-      }}
+      style={{ paddingTop: 60, background: "var(--bg)", overflow: "hidden" }}
     >
-      <div
+      {/* ── HERO ── */}
+      <section
         style={{
-          position: "sticky",
-          top: 60,
-          zIndex: 30,
-          background: "color-mix(in oklab, var(--bg) 82%, transparent)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid var(--border)",
+          position: "relative",
+          minHeight: "92vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "80px 36px 60px",
+          maxWidth: 1200,
+          margin: "0 auto",
         }}
       >
-        <nav
+        {/* background orbs */}
+        <div
           style={{
-            maxWidth: 1080,
+            position: "absolute",
+            top: "10%",
+            left: "60%",
+            width: 480,
+            height: 480,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "10%",
+            left: "5%",
+            width: 320,
+            height: 320,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, var(--green-dim) 0%, transparent 70%)",
+            filter: "blur(36px)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              border: "1px solid var(--accent-border)",
+              background: "var(--accent-dim)",
+              borderRadius: 999,
+              padding: "5px 14px",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "1.2px",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              marginBottom: 36,
+            }}
+          >
+            PromptHub — About
+          </div>
+
+          <h1
+            style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(3rem, 8vw, 7.5rem)",
+              letterSpacing: "-3px",
+              lineHeight: 0.95,
+              color: "var(--text)",
+              marginBottom: 40,
+            }}
+          >
+            프롬프트를
+            <br />
+            <span style={{ color: "var(--accent)" }}>발전시키는</span>
+            <br />
+            협업 플랫폼.
+          </h1>
+
+          <p
+            style={{
+              fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
+              color: "var(--text-dim)",
+              lineHeight: 1.85,
+              maxWidth: 520,
+            }}
+          >
+            생성형 AI 시대, 좋은 프롬프트 하나가 결과를 바꿉니다.
+            <br />
+            PromptHub는 프롬프트를 찾고, 공유하고, Git처럼 버전 관리하는
+            플랫폼입니다.
+          </p>
+        </div>
+      </section>
+
+      {/* ── WHY ── */}
+      <section
+        style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
             margin: "0 auto",
-            display: "flex",
-            gap: 10,
-            overflowX: "auto",
-            padding: "14px 16px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 60,
+            alignItems: "center",
           }}
         >
-          {sections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              style={{
-                whiteSpace: "nowrap",
-                textDecoration: "none",
-                border: "1px solid var(--border)",
-                borderRadius: 999,
-                padding: "8px 14px",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: ".2px",
-                color: "var(--text-dim)",
-                background: "var(--surface)",
-                boxShadow: "0 4px 14px color-mix(in oklab, var(--accent) 12%, transparent)",
-              }}
-            >
-              {section.title}
-            </a>
-          ))}
-        </nav>
-      </div>
-
-      <div className="h-[calc(100vh-112px)] overflow-y-auto scroll-smooth snap-y snap-proximity md:snap-mandatory">
-        {sections.map((section) => (
-          <section
-            key={section.id}
-            id={section.id}
-            className="snap-start min-h-[calc(100vh-112px)] px-6 py-10 md:px-10"
-          >
+          {/* left */}
+          <div>
             <div
               style={{
-                maxWidth: 1080,
-                margin: "0 auto",
-                border: "1px solid var(--border)",
-                borderRadius: 22,
-                background: "color-mix(in oklab, var(--surface) 88%, transparent)",
-                backdropFilter: "blur(6px)",
-                boxShadow: "0 16px 42px color-mix(in oklab, #000 14%, transparent)",
-                padding: "30px 26px",
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1.2px",
+                color: "var(--accent)",
+                marginBottom: 20,
               }}
-              className="md:p-11"
             >
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 18, gap: 16 }}>
-                <div>
+              The Problem
+            </div>
+            <h2
+              style={{
+                fontFamily: "'Syne',sans-serif",
+                fontWeight: 800,
+                fontSize: "clamp(2rem, 3.5vw, 3.2rem)",
+                letterSpacing: "-1.5px",
+                lineHeight: 1.1,
+                color: "var(--text)",
+                marginBottom: 28,
+              }}
+            >
+              왜 PromptHub가
+              <br />
+              필요한가?
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[
+                {
+                  icon: "⚠️",
+                  text: "프롬프트가 웹사이트와 커뮤니티에 흩어져 찾기 어렵습니다.",
+                },
+                {
+                  icon: "⚠️",
+                  text: "복사해서 쓰다 보면 원본을 알기 어려워집니다.",
+                },
+                {
+                  icon: "⚠️",
+                  text: "수정하다 보면 어떤 버전이 가장 좋은지 관리하기 어렵습니다.",
+                },
+              ].map(({ icon, text }, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    gap: 14,
+                    alignItems: "flex-start",
+                    padding: "14px 18px",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>
+                    {icon}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: "var(--text-dim)",
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* right — version evolution */}
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1.2px",
+                color: "var(--text-muted)",
+                marginBottom: 20,
+              }}
+            >
+              PromptHub Solution
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {versions.map(({ v, text, note }, i) => (
+                <div
+                  key={v}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    gap: 16,
+                    alignItems: "stretch",
+                  }}
+                >
+                  {/* connector */}
+                  {i < versions.length - 1 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 19,
+                        top: "100%",
+                        width: 2,
+                        height: 10,
+                        background: "var(--accent-border)",
+                        marginTop: -2,
+                      }}
+                    />
+                  )}
                   <div
                     style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "var(--accent)",
-                      textTransform: "uppercase",
-                      letterSpacing: "1.1px",
-                      marginBottom: 8,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 0,
+                      flexShrink: 0,
                     }}
                   >
-                    PromptHub About
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        background:
+                          i === versions.length - 1
+                            ? "var(--accent)"
+                            : "var(--accent-dim)",
+                        border: `1px solid var(--accent-border)`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "'Syne',sans-serif",
+                        fontWeight: 800,
+                        fontSize: 11,
+                        color:
+                          i === versions.length - 1 ? "#fff" : "var(--accent)",
+                      }}
+                    >
+                      {v}
+                    </div>
                   </div>
-                  <h2
+                  <div
                     style={{
-                      fontFamily: "'Syne',sans-serif",
-                      fontSize: "clamp(1.9rem, 3.8vw, 3.2rem)",
-                      fontWeight: 800,
-                      color: "var(--text)",
-                      letterSpacing: "-1px",
-                      lineHeight: 1.05,
+                      flex: 1,
+                      padding: "10px 16px",
+                      background:
+                        i === versions.length - 1
+                          ? "var(--accent-dim)"
+                          : "var(--surface)",
+                      border: `1px solid ${i === versions.length - 1 ? "var(--accent-border)" : "var(--border)"}`,
+                      borderRadius: 12,
                     }}
                   >
-                    {section.title}
-                  </h2>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: ".6px",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {note}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color:
+                          i === versions.length - 1
+                            ? "var(--accent)"
+                            : "var(--text-dim)",
+                        lineHeight: 1.6,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      &ldquo;{text}&rdquo;
+                    </div>
+                  </div>
                 </div>
-                <span
-                  style={{
-                    fontFamily: "'Syne',sans-serif",
-                    fontSize: "clamp(1.8rem, 4vw, 3.1rem)",
-                    fontWeight: 800,
-                    color: "color-mix(in oklab, var(--accent) 62%, var(--text-muted))",
-                    lineHeight: 1,
-                    letterSpacing: "-1px",
-                  }}
-                >
-                  {(sections.findIndex((s) => s.id === section.id) + 1).toString().padStart(2, "0")}
-                </span>
-              </div>
+              ))}
               <div
                 style={{
-                  height: 1,
-                  width: "100%",
-                  background:
-                    "linear-gradient(90deg, color-mix(in oklab, var(--accent) 44%, transparent), transparent)",
-                  marginBottom: 18,
+                  marginTop: 8,
+                  padding: "12px 16px",
+                  background: "var(--surface2)",
+                  border: "1px dashed var(--border)",
+                  borderRadius: 12,
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  lineHeight: 1.6,
+                }}
+              >
+                PromptHub는 Git과 유사한 방식의 버전 관리 개념을 프롬프트에
+                적용했습니다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section
+        style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: 48,
+              gap: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "1.2px",
+                  color: "var(--accent)",
+                  marginBottom: 16,
+                }}
+              >
+                Features
+              </div>
+              <h2
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: "clamp(2rem, 3.5vw, 3.2rem)",
+                  letterSpacing: "-1.5px",
+                  lineHeight: 1.1,
+                  color: "var(--text)",
+                }}
+              >
+                주요 기능
+              </h2>
+            </div>
+            <p
+              style={{
+                maxWidth: 360,
+                fontSize: 14,
+                color: "var(--text-muted)",
+                lineHeight: 1.7,
+              }}
+            >
+              탐색부터 Fork, 버전 관리까지 — 프롬프트 생애 주기 전체를 하나의
+              플랫폼에서.
+            </p>
+          </div>
+
+          {/* bento grid — row 1: tall left + 2 stacked right */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1.4fr 1fr 1fr",
+              gridTemplateRows: "auto auto",
+              gap: 14,
+            }}
+          >
+            {/* Fork — tall, spans 2 rows */}
+            <div
+              style={{
+                gridRow: "span 2",
+                padding: "36px 32px",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 24,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                position: "relative",
+                overflow: "hidden",
+                minHeight: 320,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -40,
+                  right: -40,
+                  width: 200,
+                  height: 200,
+                  borderRadius: "50%",
+                  background: "var(--accent-dim)",
+                  filter: "blur(40px)",
+                  pointerEvents: "none",
                 }}
               />
-              <div style={{ display: "grid", gap: 14 }}>
-                {section.body.map((paragraph, idx) => (
-                  <p
-                    key={`${section.id}-p-${idx}`}
-                    style={{
-                      color: "var(--text-dim)",
-                      fontSize: "clamp(1rem, 1.35vw, 1.12rem)",
-                      lineHeight: 1.95,
-                      letterSpacing: "-0.1px",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
-                    {paragraph}
-                  </p>
-                ))}
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 16,
+                  background: "var(--accent-dim)",
+                  border: "1px solid var(--accent-border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 26,
+                }}
+              >
+                🔀
               </div>
-              {section.bullets && (
-                <ul
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div
                   style={{
-                    marginTop: 18,
-                    paddingLeft: 18,
-                    color: "var(--text-dim)",
-                    display: "grid",
-                    gap: 11,
-                    fontSize: "clamp(.95rem, 1.1vw, 1.04rem)",
-                    lineHeight: 1.9,
+                    fontFamily: "'Syne',sans-serif",
+                    fontWeight: 800,
+                    fontSize: 26,
+                    letterSpacing: "-.8px",
+                    color: "var(--text)",
+                    marginBottom: 12,
                   }}
                 >
-                  {section.bullets.map((bullet, idx) => (
-                    <li key={`${section.id}-b-${idx}`} style={{ paddingLeft: 2 }}>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  Fork
+                </div>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "var(--text-dim)",
+                    lineHeight: 1.75,
+                  }}
+                >
+                  다른 사람의 프롬프트를 Fork해 나만의 버전으로 발전시키세요.
+                  수정할 때마다 버전이 자동으로 기록됩니다.
+                </p>
+              </div>
             </div>
-          </section>
-        ))}
-      </div>
+
+            {/* 버전 히스토리 */}
+            <div
+              style={{
+                padding: "28px 24px",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 14 }}>📋</div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-.4px",
+                  color: "var(--text)",
+                  marginBottom: 8,
+                }}
+              >
+                버전 히스토리
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--text-dim)",
+                  lineHeight: 1.7,
+                }}
+              >
+                수정 과정을 버전별로 확인하고 언제든 되돌아볼 수 있습니다.
+              </p>
+            </div>
+
+            {/* 카테고리 탐색 */}
+            <div
+              style={{
+                padding: "28px 24px",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 14 }}>🔍</div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-.4px",
+                  color: "var(--text)",
+                  marginBottom: 8,
+                }}
+              >
+                카테고리 탐색
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--text-dim)",
+                  lineHeight: 1.7,
+                }}
+              >
+                일러스트, 개발, 고민해결, 여행 — 카테고리별로 빠르게 찾아보세요.
+              </p>
+            </div>
+
+            {/* 스크랩 */}
+            <div
+              style={{
+                padding: "28px 24px",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 14 }}>♡</div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-.4px",
+                  color: "var(--text)",
+                  marginBottom: 8,
+                }}
+              >
+                스크랩
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--text-dim)",
+                  lineHeight: 1.7,
+                }}
+              >
+                마음에 드는 프롬프트를 저장해 마이페이지에서 카테고리별로
+                관리하세요.
+              </p>
+            </div>
+
+            {/* 직접 등록 */}
+            <div
+              style={{
+                padding: "28px 24px",
+                background:
+                  "linear-gradient(135deg, var(--accent-dim), var(--surface))",
+                border: "1px solid var(--accent-border)",
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 14 }}>✏️</div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-.4px",
+                  color: "var(--text)",
+                  marginBottom: 8,
+                }}
+              >
+                프롬프트 공유
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--text-dim)",
+                  lineHeight: 1.7,
+                }}
+              >
+                내 프롬프트를 PromptHub에 공유하고 함께 발전시켜 보세요.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── GOAL ── */}
+      <section
+        style={{
+          padding: "100px 36px 120px",
+          borderTop: "1px solid var(--border)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse at 50% 100%, var(--accent-dim), transparent 60%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "1.2px",
+              color: "var(--accent)",
+              marginBottom: 24,
+              textAlign: "center",
+            }}
+          >
+            Our Goal
+          </div>
+          <h2
+            style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(2.4rem, 6vw, 5.5rem)",
+              letterSpacing: "-2.5px",
+              lineHeight: 1.05,
+              color: "var(--text)",
+              textAlign: "center",
+              marginBottom: 36,
+            }}
+          >
+            프롬프트가
+            <br />
+            <span style={{ color: "var(--accent)" }}>함께 발전하는</span>
+            <br />
+            생태계를 만든다.
+          </h2>
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: "clamp(1rem, 1.3vw, 1.1rem)",
+              color: "var(--text-muted)",
+              lineHeight: 1.85,
+              maxWidth: 560,
+              margin: "0 auto",
+            }}
+          >
+            PromptHub는 단순한 저장 공간이 아닙니다.
+            <br />
+            사용자들의 프롬프트가 서로에게 영감을 주고,
+            <br />
+            Fork와 수정을 통해 더 좋은 프롬프트로 진화하는
+            <br />
+            협업 생태계를 목표로 합니다.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }
