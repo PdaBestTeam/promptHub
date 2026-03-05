@@ -43,13 +43,6 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "problem-solving": "💬",
   travel: "✈️",
 };
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  illustration: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  development: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  "problem-solving": "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
-  travel: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  default: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-};
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
   development: "코딩·기술",
@@ -64,6 +57,26 @@ const BG_COLORS: Record<string, string> = {
   travel: "#eef3fb",
   default: "#f0eeeb",
 };
+
+function resolveCategoryKey(slug?: string | null, name?: string | null): string {
+  const s = (slug ?? "").trim().toLowerCase();
+  const n = (name ?? "").trim().toLowerCase();
+
+  if (!s && !n) return "";
+  if (s === "development" || s === "dev" || s === "개발" || n === "개발") return "development";
+  if (
+    s === "problem-solving" ||
+    s === "problem_solving" ||
+    s === "advice" ||
+    s === "고민해결" ||
+    n === "고민해결"
+  ) {
+    return "problem-solving";
+  }
+  if (s === "illustration" || s === "일러스트" || n === "일러스트") return "illustration";
+  if (s === "travel" || s === "여행" || n === "여행") return "travel";
+  return s;
+}
 
 export default function PromptListClient({
   initialPrompts,
@@ -245,13 +258,13 @@ export default function PromptListClient({
         }}
       >
         {allCategories.map((cat) => {
+          const catKey = resolveCategoryKey(cat.slug, cat.name);
           const isActive = category === cat.slug;
-          const gradient = CATEGORY_GRADIENTS[cat.slug] ?? CATEGORY_GRADIENTS.default;
-          const emoji = CATEGORY_EMOJIS[cat.slug] ?? "✨";
-          const desc = CATEGORY_DESCS[cat.slug] ?? "";
+          const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
+          const desc = CATEGORY_DESCS[catKey] ?? "";
           return (
             <button
-              key={cat.slug}
+              key={cat.id}
               onClick={() =>
                 handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
               }
@@ -385,9 +398,12 @@ export default function PromptListClient({
           }}
         >
           {prompts.map((prompt, i) => {
-            const emoji = CATEGORY_EMOJIS[prompt.category?.slug ?? ""] ?? "✨";
-            const bg =
-              BG_COLORS[prompt.category?.slug ?? ""] ?? BG_COLORS.default;
+            const promptCatKey = resolveCategoryKey(
+              prompt.category?.slug,
+              prompt.category?.name,
+            );
+            const emoji = CATEGORY_EMOJIS[promptCatKey] ?? "✨";
+            const bg = BG_COLORS[promptCatKey] ?? BG_COLORS.default;
             return (
               <div
                 key={prompt.id}
