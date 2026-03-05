@@ -384,7 +384,10 @@ export default function PromptListClient({
                   opacity: 0,
                 }}
                 onClick={() => {
-                  if (typeof window !== "undefined") sessionStorage.setItem("prompt-detail-from-list", "1");
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem("prompt-detail-from-list", "1");
+                    sessionStorage.setItem(`prompt-scrap-${prompt.id}`, String(prompt.isScrapped));
+                  }
                   router.push(`/prompts/${prompt.id}`);
                 }}
               >

@@ -27,7 +27,6 @@ export async function POST(
   if (!source) return notFound("프롬프트를 찾을 수 없습니다.");
 
   const body = await request.json().catch(() => ({}));
-  const title = body.title ?? `${source.title} (Fork v${source.currentVersionNo})`;
 
   // 루트(원본 A) 찾기
   let root = source;
@@ -61,8 +60,10 @@ export async function POST(
     nodeCount += newIds.length;
     parentIds = newIds;
   }
-  // 이번에 만들 포크가 트리에서 nodeCount번째 → v{nodeCount} 수정중, 저장 시 v{nodeCount+1}
-  const forkVersionNo = nodeCount;
+  // 새 포크는 트리의 (nodeCount+1)번째 노드
+  const forkVersionNo = nodeCount + 1;
+  const baseTitle = source.title.replace(/\s*\(Fork v\d+\)$/, "");
+  const title = body.title ?? `${baseTitle} (Fork v${forkVersionNo})`;
 
   const [forked] = await db
     .insert(promptsTable)
