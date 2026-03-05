@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function AppHeader() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   function handleLogout() {
     logout();
@@ -28,7 +32,7 @@ export default function AppHeader() {
         justifyContent: "space-between",
         padding: "0 36px",
         height: "60px",
-        background: "rgba(245,244,240,0.92)",
+        background: "var(--bg)",
         backdropFilter: "blur(20px)",
         borderBottom: "1px solid var(--border)",
       }}
@@ -53,6 +57,14 @@ export default function AppHeader() {
 
       {/* Right side */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button
+          className="btn-ghost"
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+          style={{ padding: "6px 10px" }}
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         {user ? (
           <>
             <button className="btn-primary" onClick={() => router.push("/prompts/new")}>

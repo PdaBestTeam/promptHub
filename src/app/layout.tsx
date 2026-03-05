@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthContext";
+import { ThemeProvider } from "@/components/providers/theme-providers";
 
 export const metadata: Metadata = {
   title: "PromptHub — 검증된 프롬프트를 찾고, Fork하고, 발전시키세요",
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap"
@@ -21,9 +22,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

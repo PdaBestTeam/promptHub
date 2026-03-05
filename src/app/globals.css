@@ -48,6 +48,28 @@
   --ring-color: var(--accent-border);
 }
 
+.dark {
+  --bg: #111418;
+  --surface: #191d24;
+  --surface2: #222833;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.24);
+  --text: #f0f3f8;
+  --text-muted: #9aa4b5;
+  --text-dim: #c2c9d6;
+  --accent: #ff9154;
+  --accent-dim: rgba(255, 145, 84, 0.10);
+  --accent-border: rgba(255, 145, 84, 0.32);
+  --green: #42c6a3;
+  --green-dim: rgba(66, 198, 163, 0.16);
+  --green-border: rgba(66, 198, 163, 0.34);
+  --red: #ff7c74;
+  --red-dim: rgba(255, 124, 116, 0.14);
+  --red-border: rgba(255, 124, 116, 0.32);
+  --purple: #c18dff;
+  --purple-dim: rgba(193, 141, 255, 0.16);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -57,6 +79,10 @@
 html {
   color-scheme: light;
   background: var(--bg);
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
