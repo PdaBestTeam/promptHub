@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -44,7 +44,7 @@ interface UserInfo {
   scrapCount: number;
 }
 
-export default function MypagePage() {
+function MypageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, authFetch, logout, loading: authLoading } = useAuth();
@@ -692,5 +692,19 @@ export default function MypagePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function MypagePage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ paddingTop: 80, textAlign: "center", color: "var(--text-muted)" }}>
+          로딩 중...
+        </div>
+      }
+    >
+      <MypageContent />
+    </Suspense>
   );
 }
