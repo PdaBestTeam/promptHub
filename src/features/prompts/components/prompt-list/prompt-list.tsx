@@ -65,6 +65,7 @@ export default async function PromptList({
       forkCount: promptsTable.forkCount,
       parentPromptId: promptsTable.parentPromptId,
       createdAt: promptsTable.createdAt,
+      modelName: promptsTable.modelName,
       category: {
         id: categoriesTable.id,
         name: categoriesTable.name,
