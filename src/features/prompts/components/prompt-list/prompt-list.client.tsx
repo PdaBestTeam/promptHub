@@ -2,7 +2,7 @@
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
 // Client Component: 검색·필터·스크랩 인터랙션 담당
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
