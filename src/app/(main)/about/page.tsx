@@ -1,5 +1,7 @@
 "use client";
 
+import { GitFork } from "lucide-react";
+
 const versions = [
   { v: "v1", text: "친절한 톤으로 설명해줘", note: "초안" },
   {
@@ -478,7 +480,7 @@ export default function AboutPage() {
                   fontSize: 26,
                 }}
               >
-                🔀
+                <GitFork size={26} style={{ color: "var(--accent)" }} />
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
                 <div

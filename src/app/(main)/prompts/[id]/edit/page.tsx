@@ -19,6 +19,8 @@ export default function EditPromptPage() {
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<number | "">("");
+  const [modelName, setModelName] = useState("");
+  const [result, setResult] = useState("");
   const [changeNote, setChangeNote] = useState("");
   const [currentVersionNo, setCurrentVersionNo] = useState(1);
   const [nextVersionNoOnSave, setNextVersionNoOnSave] = useState(1);
@@ -66,6 +68,8 @@ export default function EditPromptPage() {
         description,
         content,
         categoryId: categoryId || null,
+        modelName: modelName.trim() || null,
+        result: result.trim() || null,
         isPublic: true,
         changeNote,
       }),
@@ -285,6 +289,48 @@ export default function EditPromptPage() {
                 ))}
               </select>
             </div>
+            <div style={{ marginBottom: 18 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--text-dim)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".7px",
+                  marginBottom: 6,
+                }}
+              >
+                생성형 AI 유형
+              </label>
+              <select
+                style={
+                  {
+                    ...inputStyle,
+                    appearance: "none",
+                    paddingRight: 36,
+                    cursor: "pointer",
+                    backgroundImage:
+                      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E\")",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 13px center",
+                  } as React.CSSProperties
+                }
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+              >
+                <option value="">선택 (선택사항)</option>
+                <option value="ChatGPT">ChatGPT</option>
+                <option value="Claude">Claude</option>
+                <option value="Gemini">Gemini</option>
+                <option value="Perplexity">Perplexity</option>
+                <option value="Midjourney">Midjourney</option>
+                <option value="DALL-E 3">DALL-E 3</option>
+                <option value="Stable Diffusion">Stable Diffusion</option>
+                <option value="Copilot">Copilot</option>
+                <option value="Notion AI">Notion AI</option>
+              </select>
+            </div>
           </div>
 
           <div
@@ -330,6 +376,55 @@ export default function EditPromptPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
+            />
+          </div>
+
+          <div
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: 16,
+              padding: 28,
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: ".9px",
+                color: "var(--text-muted)",
+                marginBottom: 18,
+                paddingBottom: 10,
+                borderBottom: "1px solid var(--border)",
+              }}
+            >
+              프롬프트 결과{" "}
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-muted)",
+                  fontWeight: 400,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                }}
+              >
+                (선택)
+              </span>
+            </div>
+            <textarea
+              style={
+                {
+                  ...inputStyle,
+                  minHeight: 100,
+                  resize: "vertical",
+                  lineHeight: 1.6,
+                } as React.CSSProperties
+              }
+              placeholder="이 프롬프트를 사용했을 때 나온 결과 예시를 적어주세요."
+              value={result}
+              onChange={(e) => setResult(e.target.value)}
             />
           </div>
 

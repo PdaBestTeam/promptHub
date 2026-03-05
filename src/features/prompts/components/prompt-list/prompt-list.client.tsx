@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
+import { GitFork } from "lucide-react";
 
 interface Category {
   id: number;
@@ -507,7 +508,8 @@ export default function PromptListClient({
                         fontWeight: 600,
                       }}
                     >
-                      🔀 Fork
+                      <GitFork size={10} style={{ verticalAlign: "middle", marginRight: 2 }} />
+                      Fork
                     </span>
                   )}
                   <button
@@ -636,9 +638,10 @@ export default function PromptListClient({
                         ♡ {prompt.scrapCount}
                       </span>
                       <span
-                        style={{ fontSize: 11, color: "var(--text-muted)" }}
+                        style={{ fontSize: 11, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 2 }}
                       >
-                        🔀 {prompt.forkCount}
+                        <GitFork size={11} />
+                        {prompt.forkCount}
                       </span>
                       <span
                         style={{ fontSize: 11, color: "var(--text-muted)" }}
