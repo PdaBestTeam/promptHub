@@ -65,5 +65,7 @@ export async function GET(
     content: source.content,
     description: source.description ?? "",
     categoryId: source.categoryId,
+    result: source.result ?? "",
+    modelName: source.modelName ?? "",
   });
 }

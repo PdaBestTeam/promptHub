@@ -26,6 +26,7 @@ export async function GET(
       content: promptsTable.content,
       description: promptsTable.description,
       result: promptsTable.result,
+      modelName: promptsTable.modelName,
       isPublic: promptsTable.isPublic,
       currentVersionNo: promptsTable.currentVersionNo,
       viewCount: promptsTable.viewCount,
@@ -139,7 +140,7 @@ export async function PATCH(
   if (!existing) return notFound("프롬프트를 찾을 수 없습니다.");
   if (existing.authorId !== auth.userId) return forbidden();
 
-  const { title, content, description, categoryId, isPublic, changeNote } =
+  const { title, content, description, categoryId, isPublic, changeNote, result, modelName } =
     await request.json();
 
   const newVersionNo = existing.currentVersionNo + 1;
@@ -152,6 +153,8 @@ export async function PATCH(
       ...(description !== undefined ? { description } : {}),
       ...(categoryId !== undefined ? { categoryId } : {}),
       ...(isPublic !== undefined ? { isPublic } : {}),
+      ...(result !== undefined ? { result: result ?? null } : {}),
+      ...(modelName !== undefined ? { modelName: modelName ?? null } : {}),
       currentVersionNo: newVersionNo,
     })
     .where(eq(promptsTable.id, promptId))

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { GitFork } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -383,7 +384,10 @@ export default function MypagePage() {
                       {p.category && <span>{p.category.name}</span>}
                       <span>v{p.currentVersionNo}</span>
                       <span>♡ {p.scrapCount}</span>
-                      <span>🔀 {p.forkCount}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <GitFork size={12} />
+                        {p.forkCount}
+                      </span>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
