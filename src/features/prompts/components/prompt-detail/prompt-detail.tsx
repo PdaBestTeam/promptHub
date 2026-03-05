@@ -84,6 +84,7 @@ export default async function PromptDetail({ id }: { id: string }) {
         description: prompt.description,
         isPublic: prompt.isPublic,
         currentVersionNo: prompt.currentVersionNo,
+        nextForkVersionNo: prompt.currentVersionNo,
         viewCount: prompt.viewCount,
         scrapCount: prompt.scrapCount,
         forkCount: prompt.forkCount,
