@@ -8,7 +8,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 import { Binoculars, Heart, GitFork, ClipboardList } from "lucide-react";
 
 interface Version {
-  id: number;
+  id: string;
   versionNo: number;
   title: string;
   content: string;
