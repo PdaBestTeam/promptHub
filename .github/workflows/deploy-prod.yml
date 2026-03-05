@@ -1,0 +1,60 @@
+name: Deploy to EC2 (Blue/Green)
+
+on:
+  push:
+    branches: ["prod"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}/prompthub:latest
+
+      - name: Copy deploy script to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deploy/bg-deploy.sh"
+          target: "/home/ubuntu/deploy"
+
+      - name: Run deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            mkdir -p /home/ubuntu/app
+
+            cat > /home/ubuntu/app/.env.production << 'EOF'
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
+            chmod 600 /home/ubuntu/app/.env.production
+
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            docker pull ghcr.io/${{ github.repository }}/prompthub:latest
+            docker tag ghcr.io/${{ github.repository }}/prompthub:latest prompthub:latest
+
+            chmod +x /home/ubuntu/deploy/bg-deploy.sh
+            /home/ubuntu/deploy/bg-deploy.sh
