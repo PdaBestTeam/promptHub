@@ -1,0 +1,1 @@
+ALTER TABLE "promptHub"."prompts" ADD COLUMN "model_name" varchar(200);
