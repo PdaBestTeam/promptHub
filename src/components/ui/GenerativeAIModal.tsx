@@ -123,7 +123,7 @@ export default function GenerativeAIModal() {
           }
         }}
       >
-        ✨ 생성형 AI
+        ✨<span className="nav-btn-text"> 생성형 AI</span>
       </button>
 
       {open && (

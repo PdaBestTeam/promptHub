@@ -43,6 +43,21 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "problem-solving": "💬",
   travel: "✈️",
 };
+<<<<<<< Updated upstream
+=======
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  illustration:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  development:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  "problem-solving":
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
+  travel:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  default:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+};
+>>>>>>> Stashed changes
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
   development: "코딩·기술",
@@ -110,7 +125,6 @@ export default function PromptListClient({
     setHasMore(initialPrompts.length === 12);
   }, [initialQ, initialCategory, initialSort, initialPrompts, initialTotal]);
 
-
   const fetchPrompts = useCallback(
     async (
       nextQ: string,
@@ -147,7 +161,7 @@ export default function PromptListClient({
       sessionStorage.removeItem("prompt-detail-from-list");
       fetchPrompts(q, category, sort, 1, true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPrompts]);
 
   // 인증 완료 후 스크랩 상태 동기화 (최초 1회)
@@ -156,7 +170,7 @@ export default function PromptListClient({
     authSyncedRef.current = true;
     if (!user) return;
     fetchPrompts(q, category, sort, 1, true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
   function handleFilter(newQ: string, newCat: string, newSort: string) {
@@ -190,12 +204,19 @@ export default function PromptListClient({
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${prompt.id}/scrap`, { method });
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(`prompt-scrap-${prompt.id}`, String(newIsScrapped));
+      sessionStorage.setItem(
+        `prompt-scrap-${prompt.id}`,
+        String(newIsScrapped),
+      );
     }
     setPrompts((prev) =>
       prev.map((p) =>
         p.id === prompt.id
-          ? { ...p, isScrapped: newIsScrapped, scrapCount: p.scrapCount + (newIsScrapped ? 1 : -1) }
+          ? {
+              ...p,
+              isScrapped: newIsScrapped,
+              scrapCount: p.scrapCount + (newIsScrapped ? 1 : -1),
+            }
           : p,
       ),
     );
@@ -260,8 +281,15 @@ export default function PromptListClient({
         {allCategories.map((cat) => {
           const catKey = resolveCategoryKey(cat.slug, cat.name);
           const isActive = category === cat.slug;
+<<<<<<< Updated upstream
           const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
           const desc = CATEGORY_DESCS[catKey] ?? "";
+=======
+          const gradient =
+            CATEGORY_GRADIENTS[cat.slug] ?? CATEGORY_GRADIENTS.default;
+          const emoji = CATEGORY_EMOJIS[cat.slug] ?? "✨";
+          const desc = CATEGORY_DESCS[cat.slug] ?? "";
+>>>>>>> Stashed changes
           return (
             <button
               key={cat.id}
@@ -276,9 +304,7 @@ export default function PromptListClient({
                 fontSize: 12,
                 cursor: "pointer",
                 fontFamily: "inherit",
-                background: isActive
-                  ? "var(--accent-dim)"
-                  : "var(--surface)",
+                background: isActive ? "var(--accent-dim)" : "var(--surface)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -294,7 +320,8 @@ export default function PromptListClient({
                 if (!isActive) {
                   e.currentTarget.style.borderColor = "var(--border-hover)";
                   e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 14px rgba(0,0,0,0.08)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -415,7 +442,10 @@ export default function PromptListClient({
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     sessionStorage.setItem("prompt-detail-from-list", "1");
-                    sessionStorage.setItem(`prompt-scrap-${prompt.id}`, String(prompt.isScrapped));
+                    sessionStorage.setItem(
+                      `prompt-scrap-${prompt.id}`,
+                      String(prompt.isScrapped),
+                    );
                   }
                   router.push(`/prompts/${prompt.id}`);
                 }}
