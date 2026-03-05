@@ -65,11 +65,12 @@ export default function LoginPage() {
           style={{
             fontSize: 13,
             color: "var(--text-muted)",
-            marginBottom: 28,
+            marginBottom: 10,
             lineHeight: 1.5,
           }}
         >
-          검증된 프롬프트를 찾고, Fork하고, 발전시키세요.
+          검증된 프롬프트를 찾고, Fork하고, 발전시키세요.<br />
+          로그인하고 프롬프트를 이어서 탐색하세요.
         </div>
         <div
           style={{
@@ -77,16 +78,11 @@ export default function LoginPage() {
             fontWeight: 800,
             fontSize: 24,
             letterSpacing: "-.8px",
-            color: "#fff",
-            marginBottom: 4,
+            color: "var(--text)",
+            marginBottom: 10,
           }}
         >
           다시 오셨군요 👋
-        </div>
-        <div
-          style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}
-        >
-          로그인하고 프롬프트를 이어서 탐색하세요.
         </div>
 
         <form onSubmit={handleSubmit}>
