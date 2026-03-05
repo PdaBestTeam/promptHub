@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import GenerativeAIModal from "@/components/ui/GenerativeAIModal";
 
 export default function AppHeader() {
   const { user, logout } = useAuth();
@@ -67,7 +68,11 @@ export default function AppHeader() {
         </button>
         {user ? (
           <>
-            <button className="btn-primary" onClick={() => router.push("/prompts/new")}>
+            <GenerativeAIModal />
+            <button
+              className="btn-primary"
+              onClick={() => router.push("/prompts/new")}
+            >
               + 프롬프트 등록
             </button>
             <div
@@ -84,10 +89,12 @@ export default function AppHeader() {
                 transition: "all .15s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border-hover)";
+                (e.currentTarget as HTMLDivElement).style.borderColor =
+                  "var(--border-hover)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)";
+                (e.currentTarget as HTMLDivElement).style.borderColor =
+                  "var(--border)";
               }}
             >
               <div
@@ -106,11 +113,21 @@ export default function AppHeader() {
               >
                 {initials}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-dim)" }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--text-dim)",
+                }}
+              >
                 {user.nickname}
               </span>
             </div>
-            <button className="btn-ghost" onClick={handleLogout} style={{ fontSize: 12, padding: "6px 12px" }}>
+            <button
+              className="btn-ghost"
+              onClick={handleLogout}
+              style={{ fontSize: 12, padding: "6px 12px" }}
+            >
               로그아웃
             </button>
           </>
@@ -119,7 +136,10 @@ export default function AppHeader() {
             <button className="btn-ghost" onClick={() => router.push("/login")}>
               로그인
             </button>
-            <button className="btn-primary" onClick={() => router.push("/signup")}>
+            <button
+              className="btn-primary"
+              onClick={() => router.push("/signup")}
+            >
               회원가입
             </button>
           </>

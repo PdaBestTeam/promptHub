@@ -43,11 +43,11 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   travel: "✈️",
 };
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  illustration: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  development: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  "problem-solving": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-  travel: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-  default: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+  illustration: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  development: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  "problem-solving": "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
+  travel: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  default: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
 };
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
@@ -84,7 +84,16 @@ export default function PromptListClient({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialPrompts.length === 12);
 
-  // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경 → 재렌더) 클라이언트 상태 동기화
+  // 상세 페이지에서 뒤로가기 시 스크랩 등 최신 데이터로 목록 갱신
+  useEffect(() => {
+    const fromDetail = typeof window !== "undefined" && sessionStorage.getItem("prompt-detail-from-list");
+    if (fromDetail) {
+      sessionStorage.removeItem("prompt-detail-from-list");
+      router.refresh();
+    }
+  }, [router]);
+
+  // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경·refresh) 클라이언트 상태 동기화
   useEffect(() => {
     setQ(initialQ);
     setCategory(initialCategory);
@@ -93,7 +102,7 @@ export default function PromptListClient({
     setTotalCount(initialTotal);
     setPage(1);
     setHasMore(initialPrompts.length === 12);
-  }, [initialQ, initialCategory, initialSort]);
+  }, [initialQ, initialCategory, initialSort, initialPrompts, initialTotal]);
 
 
   const fetchPrompts = useCallback(
@@ -270,7 +279,7 @@ export default function PromptListClient({
                 }
               }}
             >
-              {/* Gradient bar on top */}
+              {/* Gradient bar on top (비활성화: 색상 미표시) */}
               <div
                 style={{
                   position: "absolute",
@@ -278,7 +287,7 @@ export default function PromptListClient({
                   left: 0,
                   right: 0,
                   height: 3,
-                  background: isActive ? gradient : "transparent",
+                  background: "transparent",
                   borderRadius: "14px 14px 0 0",
                   transition: "all 0.2s ease",
                 }}
@@ -374,7 +383,10 @@ export default function PromptListClient({
                   animationDelay: `${Math.min(i, 8) * 0.04}s`,
                   opacity: 0,
                 }}
-                onClick={() => router.push(`/prompts/${prompt.id}`)}
+                onClick={() => {
+                  if (typeof window !== "undefined") sessionStorage.setItem("prompt-detail-from-list", "1");
+                  router.push(`/prompts/${prompt.id}`);
+                }}
               >
                 <div
                   style={{
