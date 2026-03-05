@@ -2,7 +2,6 @@
 // Server Component: 데이터 fetch 후 Client Component에 전달
 
 import PromptListClient from "./prompt-list.client";
-import { cookies, headers } from "next/headers";
 
 interface Category {
   id: number;
@@ -17,10 +16,9 @@ interface SearchProps {
 }
 
 export default async function PromptList({ q = "", category = "", sort = "latest" }: SearchProps) {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "localhost:3000";
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const baseUrl = `${protocol}://${host}`;
+  // SSR 내부 호출은 항상 http://127.0.0.1:3000 사용
+  // (외부 프로토콜과 무관하게 컨테이너 내부에서 자기 자신을 직접 호출)
+  const baseUrl = "http://127.0.0.1:3000";
 
   const params = new URLSearchParams({ sort, limit: "12" });
   if (q) params.set("q", q);
