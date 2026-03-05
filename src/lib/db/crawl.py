@@ -7,7 +7,10 @@ prpt.ai 크롤러 → PostgreSQL (promptHub 스키마)
     playwright install chromium
 
 실행:
-    python crawler_prpt_ai.py
+    cd src/lib/db
+    pip install requests psycopg2-binary playwright
+    playwright install chromium
+    python crawl.py
 """
 
 import time
@@ -132,29 +135,38 @@ def detail_url(post_id: int, platform_type: str) -> str:
         return f"{SITE_BASE}/prompt/imageDetail/{post_id}"
 
 
-async def fetch_description(page: Page, post_id: int, platform_type: str) -> str | None:
+async def fetch_description_and_result(page: Page, post_id: int, platform_type: str) -> tuple[str | None, str | None]:
+    """상세 페이지에서 description, RESULT(결과) 수집. (description, result) 반환."""
     url = detail_url(post_id, platform_type)
+    desc, result = None, None
     try:
         await page.goto(url, wait_until="networkidle", timeout=20000)
         await page.wait_for_timeout(800)
         # 소개 텍스트: .info-cont 안의 첫 번째 .txt
         desc = await page.locator(".info-cont .txt").first.inner_text(timeout=3000)
-        desc = desc.strip()
-        return desc if desc else None
+        desc = desc.strip() if desc else None
+        # 결과: .result-cont .txt 등 (있으면 수집)
+        try:
+            result = await page.locator(".result-cont .txt").first.inner_text(timeout=2000)
+            result = result.strip() if result else None
+        except Exception:
+            result = None
+        return (desc or None, result or None)
     except PwTimeout:
         log.warning(f"  타임아웃: {url}")
-        return None
+        return (None, None)
     except Exception as e:
         log.warning(f"  description 수집 실패 (id={post_id}): {e}")
-        return None
+        return (None, None)
 
 
 # ─────────────────────────────────────────────
 # DB 저장
 # ─────────────────────────────────────────────
-def save_prompt(conn, item: dict, description: str | None, cat_db_id: int) -> int | None:
+def save_prompt(conn, item: dict, description: str | None, cat_db_id: int, result_from_page: str | None = None) -> int | None:
     title      = str(item.get("TITLE") or "").strip()[:300]
     content    = str(item.get("PROMPT") or "").strip()
+    result     = (result_from_page or str(item.get("RESULT") or "")).strip()
     view_count = int(item.get("VIEW_COUNT", 0) or 0)
     like_count = int(item.get("COUNT_FAVORITE", 0) or 0)
     post_id    = item.get("POST_ID")
@@ -175,11 +187,11 @@ def save_prompt(conn, item: dict, description: str | None, cat_db_id: int) -> in
 
     cur.execute("""
         INSERT INTO "promptHub".prompts
-            (author_id, category_id, title, content, description,
+            (author_id, category_id, title, content, description, result,
              is_public, current_version_no, view_count, scrap_count, fork_count)
-        VALUES (%s, %s, %s, %s, %s, TRUE, 1, %s, %s, 0)
+        VALUES (%s, %s, %s, %s, %s, %s, TRUE, 1, %s, %s, 0)
         RETURNING id
-    """, (BOT_USER_ID, cat_db_id, title, content, description, view_count, like_count))
+    """, (BOT_USER_ID, cat_db_id, title, content, description, result or None, view_count, like_count))
     prompt_id = cur.fetchone()[0]
 
     cur.execute("""
@@ -228,14 +240,16 @@ async def main():
                 title_preview = str(item.get("TITLE") or "")[:45]
                 log.info(f"[{cat_name}] {i}/{len(items)} id={post_id} ({platform}) | {title_preview}")
 
-                # 상세 페이지에서 description 수집
-                description = await fetch_description(detail_page, post_id, platform)
+                # 상세 페이지에서 description, RESULT(결과) 수집
+                description, result_from_page = await fetch_description_and_result(detail_page, post_id, platform)
                 if description:
                     log.info(f"  📝 description: {description[:60]}")
+                if result_from_page:
+                    log.info(f"  📄 result: {result_from_page[:60]}…")
                 await asyncio.sleep(DETAIL_DELAY)
 
                 try:
-                    pid = save_prompt(conn, item, description, cat_db_id)
+                    pid = save_prompt(conn, item, description, cat_db_id, result_from_page)
                     if pid:
                         log.info(f"  ✅ 저장 (prompt_id={pid})")
                         stats[cat_name]["saved"] += 1

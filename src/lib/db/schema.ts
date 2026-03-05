@@ -43,6 +43,7 @@ export const promptsTable = appSchema.table(
     title: varchar("title", { length: 300 }).notNull(),
     content: text("content").notNull(),
     description: text("description"),
+    result: text("result"),
     isPublic: boolean("is_public").notNull().default(true),
     // Fork relations
     parentPromptId: integer("parent_prompt_id").references(
