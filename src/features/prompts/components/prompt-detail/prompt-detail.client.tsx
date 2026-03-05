@@ -22,6 +22,7 @@ interface PromptDetailData {
   title: string;
   content: string;
   description: string | null;
+  result?: string | null;
   isPublic: boolean;
   currentVersionNo: number;
   viewCount: number;
@@ -69,11 +70,11 @@ export default function PromptDetailClient({
     authFetch(`/api/prompts/${initialPrompt.id}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.isScrapped !== undefined) {
+        if (data.isScrapped !== undefined || data.result !== undefined) {
           setPrompt((p) => ({
             ...p,
-            isScrapped: data.isScrapped,
-            scrapCount: data.scrapCount,
+            ...(data.isScrapped !== undefined && { isScrapped: data.isScrapped, scrapCount: data.scrapCount }),
+            ...(data.result !== undefined && { result: data.result ?? null }),
           }));
         }
       })
@@ -441,6 +442,18 @@ export default function PromptDetailClient({
                 {displayContent}
               </div>
             </div>
+
+            {/* 프롬프트 결과 (result 있을 때만) */}
+            {prompt.result && (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "var(--text-muted)" }}>✨ 프롬프트 결과</span>
+                </div>
+                <div style={{ padding: 20, fontSize: 13, lineHeight: 1.85, color: "var(--text-dim)", whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                  {prompt.result}
+                </div>
+              </div>
+            )}
 
             {/* Tabs */}
             <div
