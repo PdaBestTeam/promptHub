@@ -1,12 +1,12 @@
 import AppHeader from "@/components/layouts/app-header";
-import OnboardingModal from "@/components/ui/OnboardingModal";
 import type { ReactNode } from "react";
+import OnboardingModalHost from "@/components/ui/OnboardingModalHost";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div>
       <AppHeader />
-      <OnboardingModal />
+      <OnboardingModalHost />
       {children}
     </div>
   );
