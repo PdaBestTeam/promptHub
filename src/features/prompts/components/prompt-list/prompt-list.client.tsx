@@ -2,7 +2,7 @@
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
 // Client Component: 검색·필터·스크랩 인터랙션 담당
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -73,7 +73,8 @@ export default function PromptListClient({
   initialSort,
 }: Props) {
   const router = useRouter();
-  const { user, authFetch } = useAuth();
+  const { user, authFetch, loading: authLoading } = useAuth();
+  const authSyncedRef = useRef(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
   const [totalCount, setTotalCount] = useState(initialTotal);
@@ -83,15 +84,6 @@ export default function PromptListClient({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialPrompts.length === 12);
-
-  // 상세 페이지에서 뒤로가기 시 스크랩 등 최신 데이터로 목록 갱신
-  useEffect(() => {
-    const fromDetail = typeof window !== "undefined" && sessionStorage.getItem("prompt-detail-from-list");
-    if (fromDetail) {
-      sessionStorage.removeItem("prompt-detail-from-list");
-      router.refresh();
-    }
-  }, [router]);
 
   // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경·refresh) 클라이언트 상태 동기화
   useEffect(() => {
@@ -133,6 +125,26 @@ export default function PromptListClient({
     [authFetch],
   );
 
+  // 상세 페이지에서 뒤로가기 시 authFetch로 재조회 (스크랩 상태 반영)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const fromDetail = sessionStorage.getItem("prompt-detail-from-list");
+    if (fromDetail) {
+      sessionStorage.removeItem("prompt-detail-from-list");
+      fetchPrompts(q, category, sort, 1, true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPrompts]);
+
+  // 인증 완료 후 스크랩 상태 동기화 (최초 1회)
+  useEffect(() => {
+    if (authLoading || authSyncedRef.current) return;
+    authSyncedRef.current = true;
+    if (!user) return;
+    fetchPrompts(q, category, sort, 1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
+
   function handleFilter(newQ: string, newCat: string, newSort: string) {
     setQ(newQ);
     setCategory(newCat);
@@ -160,16 +172,16 @@ export default function PromptListClient({
       router.push("/login");
       return;
     }
+    const newIsScrapped = !prompt.isScrapped;
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${prompt.id}/scrap`, { method });
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`prompt-scrap-${prompt.id}`, String(newIsScrapped));
+    }
     setPrompts((prev) =>
       prev.map((p) =>
         p.id === prompt.id
-          ? {
-              ...p,
-              isScrapped: !p.isScrapped,
-              scrapCount: p.scrapCount + (p.isScrapped ? -1 : 1),
-            }
+          ? { ...p, isScrapped: newIsScrapped, scrapCount: p.scrapCount + (newIsScrapped ? 1 : -1) }
           : p,
       ),
     );

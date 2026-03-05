@@ -117,12 +117,16 @@ export default function PromptDetailClient({
       router.push("/login");
       return;
     }
+    const newIsScrapped = !prompt.isScrapped;
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${id}/scrap`, { method });
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`prompt-scrap-${id}`, String(newIsScrapped));
+    }
     setPrompt((p) => ({
       ...p,
-      isScrapped: !p.isScrapped,
-      scrapCount: p.scrapCount + (p.isScrapped ? -1 : 1),
+      isScrapped: newIsScrapped,
+      scrapCount: p.scrapCount + (newIsScrapped ? 1 : -1),
     }));
   }
 
