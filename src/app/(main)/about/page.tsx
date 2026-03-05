@@ -19,8 +19,41 @@ export default function AboutPage() {
     <main
       style={{ paddingTop: 60, background: "var(--bg)", overflow: "hidden" }}
     >
+      {/* 반응형 오버라이드만 담당 — 기본 스타일은 모두 인라인 style={{}} */}
+      <style>{`
+        @media (max-width: 860px) {
+          .about-hero    { padding: 50px 24px 40px !important; min-height: 70vh !important; }
+          .about-section { padding: 60px 24px !important; }
+          .about-goal    { padding: 60px 24px 80px !important; }
+          .about-why-grid {
+            grid-template-columns: 1fr !important;
+            gap: 36px !important;
+          }
+          .about-features-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .about-fork-card {
+            grid-row: span 1 !important;
+            grid-column: span 2 !important;
+            min-height: auto !important;
+          }
+        }
+        @media (max-width: 520px) {
+          .about-hero    { padding: 40px 18px 32px !important; }
+          .about-section { padding: 48px 18px !important; }
+          .about-goal    { padding: 48px 18px 60px !important; }
+          .about-features-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .about-fork-card {
+            grid-column: span 1 !important;
+          }
+        }
+      `}</style>
+
       {/* ── HERO ── */}
       <section
+        className="about-hero"
         style={{
           position: "relative",
           minHeight: "92vh",
@@ -87,7 +120,7 @@ export default function AboutPage() {
             style={{
               fontFamily: "'Syne',sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(3rem, 8vw, 7.5rem)",
+              fontSize: "clamp(2.6rem, 8vw, 7.5rem)",
               letterSpacing: "-3px",
               lineHeight: 0.95,
               color: "var(--text)",
@@ -106,7 +139,7 @@ export default function AboutPage() {
               fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
               color: "var(--text-dim)",
               lineHeight: 1.85,
-              maxWidth: 520,
+              maxWidth: 600,
             }}
           >
             생성형 AI 시대, 좋은 프롬프트 하나가 결과를 바꿉니다.
@@ -119,9 +152,11 @@ export default function AboutPage() {
 
       {/* ── WHY ── */}
       <section
+        className="about-section"
         style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
       >
         <div
+          className="about-why-grid"
           style={{
             maxWidth: 1200,
             margin: "0 auto",
@@ -337,6 +372,7 @@ export default function AboutPage() {
 
       {/* ── FEATURES ── */}
       <section
+        className="about-section"
         style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -378,7 +414,7 @@ export default function AboutPage() {
             </div>
             <p
               style={{
-                maxWidth: 360,
+                maxWidth: 600,
                 fontSize: 14,
                 color: "var(--text-muted)",
                 lineHeight: 1.7,
@@ -389,8 +425,9 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* bento grid — row 1: tall left + 2 stacked right */}
+          {/* bento grid */}
           <div
+            className="about-features-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1.4fr 1fr 1fr",
@@ -400,6 +437,7 @@ export default function AboutPage() {
           >
             {/* Fork — tall, spans 2 rows */}
             <div
+              className="about-fork-card"
               style={{
                 gridRow: "span 2",
                 padding: "36px 32px",
@@ -607,6 +645,7 @@ export default function AboutPage() {
 
       {/* ── GOAL ── */}
       <section
+        className="about-goal"
         style={{
           padding: "100px 36px 120px",
           borderTop: "1px solid var(--border)",
@@ -673,11 +712,8 @@ export default function AboutPage() {
             }}
           >
             PromptHub는 단순한 저장 공간이 아닙니다.
-            <br />
             사용자들의 프롬프트가 서로에게 영감을 주고,
-            <br />
             Fork와 수정을 통해 더 좋은 프롬프트로 진화하는
-            <br />
             협업 생태계를 목표로 합니다.
           </p>
         </div>

@@ -2,7 +2,8 @@
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
 // Client Component: 검색·필터·스크랩 인터랙션 담당
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -37,10 +38,21 @@ interface Props {
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
+  // 기존
   illustration: "🎨",
   development: "💻",
   "problem-solving": "💬",
   travel: "✈️",
+  // 추가
+  writing: "✏️",
+  education: "📚",
+  marketing: "📢",
+  research: "🔬",
+  work: "💼",
+  contents: "🎬",
+  etc: "📦",
+  fun: "🎉",
+  life: "🏠",
 };
 const CATEGORY_GRADIENTS: Record<string, string> = {
   illustration: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
@@ -54,6 +66,15 @@ const CATEGORY_DESCS: Record<string, string> = {
   development: "코딩·기술",
   "problem-solving": "고민·상담",
   travel: "여행·탐방",
+  writing: "글쓰기·창작",
+  education: "학습·강의",
+  marketing: "홍보·마케팅",
+  research: "조사·분석",
+  work: "업무·생산성",
+  contents: "영상·콘텐츠",
+  etc: "기타",
+  fun: "재미·유머",
+  life: "일상·생활",
   "": "모든 프롬프트",
 };
 const BG_COLORS: Record<string, string> = {
@@ -64,6 +85,26 @@ const BG_COLORS: Record<string, string> = {
   default: "#f0eeeb",
 };
 
+function resolveCategoryKey(slug?: string | null, name?: string | null): string {
+  const s = (slug ?? "").trim().toLowerCase();
+  const n = (name ?? "").trim().toLowerCase();
+
+  if (!s && !n) return "";
+  if (s === "development" || s === "dev" || s === "개발" || n === "개발") return "development";
+  if (
+    s === "problem-solving" ||
+    s === "problem_solving" ||
+    s === "advice" ||
+    s === "고민해결" ||
+    n === "고민해결"
+  ) {
+    return "problem-solving";
+  }
+  if (s === "illustration" || s === "일러스트" || n === "일러스트") return "illustration";
+  if (s === "travel" || s === "여행" || n === "여행") return "travel";
+  return s;
+}
+
 export default function PromptListClient({
   initialPrompts,
   initialTotal,
@@ -73,7 +114,8 @@ export default function PromptListClient({
   initialSort,
 }: Props) {
   const router = useRouter();
-  const { user, authFetch } = useAuth();
+  const { user, authFetch, loading: authLoading } = useAuth();
+  const authSyncedRef = useRef(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
   const [totalCount, setTotalCount] = useState(initialTotal);
@@ -83,15 +125,6 @@ export default function PromptListClient({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialPrompts.length === 12);
-
-  // 상세 페이지에서 뒤로가기 시 스크랩 등 최신 데이터로 목록 갱신
-  useEffect(() => {
-    const fromDetail = typeof window !== "undefined" && sessionStorage.getItem("prompt-detail-from-list");
-    if (fromDetail) {
-      sessionStorage.removeItem("prompt-detail-from-list");
-      router.refresh();
-    }
-  }, [router]);
 
   // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경·refresh) 클라이언트 상태 동기화
   useEffect(() => {
@@ -103,7 +136,6 @@ export default function PromptListClient({
     setPage(1);
     setHasMore(initialPrompts.length === 12);
   }, [initialQ, initialCategory, initialSort, initialPrompts, initialTotal]);
-
 
   const fetchPrompts = useCallback(
     async (
@@ -133,6 +165,26 @@ export default function PromptListClient({
     [authFetch],
   );
 
+  // 상세 페이지에서 뒤로가기 시 authFetch로 재조회 (스크랩 상태 반영)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const fromDetail = sessionStorage.getItem("prompt-detail-from-list");
+    if (fromDetail) {
+      sessionStorage.removeItem("prompt-detail-from-list");
+      fetchPrompts(q, category, sort, 1, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchPrompts]);
+
+  // 인증 완료 후 스크랩 상태 동기화 (최초 1회)
+  useEffect(() => {
+    if (authLoading || authSyncedRef.current) return;
+    authSyncedRef.current = true;
+    if (!user) return;
+    fetchPrompts(q, category, sort, 1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
+
   function handleFilter(newQ: string, newCat: string, newSort: string) {
     setQ(newQ);
     setCategory(newCat);
@@ -160,15 +212,22 @@ export default function PromptListClient({
       router.push("/login");
       return;
     }
+    const newIsScrapped = !prompt.isScrapped;
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${prompt.id}/scrap`, { method });
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        `prompt-scrap-${prompt.id}`,
+        String(newIsScrapped),
+      );
+    }
     setPrompts((prev) =>
       prev.map((p) =>
         p.id === prompt.id
           ? {
               ...p,
-              isScrapped: !p.isScrapped,
-              scrapCount: p.scrapCount + (p.isScrapped ? -1 : 1),
+              isScrapped: newIsScrapped,
+              scrapCount: p.scrapCount + (newIsScrapped ? 1 : -1),
             }
           : p,
       ),
@@ -222,27 +281,38 @@ export default function PromptListClient({
         </select>
       </div>
 
-      {/* Category Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${allCategories.length}, 1fr)`,
-          gap: 10,
-          marginBottom: 24,
-        }}
-      >
+      {/* Category Cards — 우측 페이드로 스크롤 가능 암시 */}
+      <div style={{ position: "relative", marginBottom: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            overflowX: "auto",
+            paddingTop: 4,
+            paddingBottom: 6,
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--border) transparent",
+          } as React.CSSProperties}
+        >
+
         {allCategories.map((cat) => {
+          const catKey = resolveCategoryKey(cat.slug, cat.name);
           const isActive = category === cat.slug;
-          const gradient = CATEGORY_GRADIENTS[cat.slug] ?? CATEGORY_GRADIENTS.default;
-          const emoji = CATEGORY_EMOJIS[cat.slug] ?? "✨";
-          const desc = CATEGORY_DESCS[cat.slug] ?? "";
+          const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
+          const desc = CATEGORY_DESCS[catKey] ?? "";
           return (
             <button
-              key={cat.slug}
+              key={cat.id}
               onClick={() =>
                 handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
               }
               style={{
+                flexShrink: 0,
+                width: "calc((100% - 40px) / 5)",
+                minWidth: 100,
+                scrollSnapAlign: "start",
                 position: "relative",
                 padding: "14px 12px 12px",
                 borderRadius: 14,
@@ -250,9 +320,7 @@ export default function PromptListClient({
                 fontSize: 12,
                 cursor: "pointer",
                 fontFamily: "inherit",
-                background: isActive
-                  ? "var(--accent-dim)"
-                  : "var(--surface)",
+                background: isActive ? "var(--accent-dim)" : "var(--surface)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -268,7 +336,8 @@ export default function PromptListClient({
                 if (!isActive) {
                   e.currentTarget.style.borderColor = "var(--border-hover)";
                   e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 14px rgba(0,0,0,0.08)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -328,6 +397,19 @@ export default function PromptListClient({
             </button>
           );
         })}
+        </div>
+        {/* 우측 그라데이션 페이드 — 더 스크롤 가능함을 암시 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 60,
+            height: "calc(100% - 6px)",
+            background: "linear-gradient(to right, transparent, var(--bg))",
+            pointerEvents: "none",
+          }}
+        />
       </div>
 
       <div
@@ -372,9 +454,12 @@ export default function PromptListClient({
           }}
         >
           {prompts.map((prompt, i) => {
-            const emoji = CATEGORY_EMOJIS[prompt.category?.slug ?? ""] ?? "✨";
-            const bg =
-              BG_COLORS[prompt.category?.slug ?? ""] ?? BG_COLORS.default;
+            const promptCatKey = resolveCategoryKey(
+              prompt.category?.slug,
+              prompt.category?.name,
+            );
+            const emoji = CATEGORY_EMOJIS[promptCatKey] ?? "✨";
+            const bg = BG_COLORS[promptCatKey] ?? BG_COLORS.default;
             return (
               <div
                 key={prompt.id}
@@ -386,7 +471,10 @@ export default function PromptListClient({
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     sessionStorage.setItem("prompt-detail-from-list", "1");
-                    sessionStorage.setItem(`prompt-scrap-${prompt.id}`, String(prompt.isScrapped));
+                    sessionStorage.setItem(
+                      `prompt-scrap-${prompt.id}`,
+                      String(prompt.isScrapped),
+                    );
                   }
                   router.push(`/prompts/${prompt.id}`);
                 }}
@@ -577,6 +665,40 @@ export default function PromptListClient({
           </button>
         </div>
       )}
+
+      <Link
+        href="/about"
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 100,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "8px 14px",
+          borderRadius: 8,
+          border: "1px solid var(--border)",
+          background: "var(--surface)",
+          color: "var(--text-dim)",
+          fontSize: 13,
+          fontWeight: 500,
+          textDecoration: "none",
+          fontFamily: "inherit",
+          transition: "all .15s",
+          boxShadow: "0 4px 20px rgba(0,0,0,.12)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "var(--border-hover)";
+          e.currentTarget.style.color = "var(--text)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "var(--border)";
+          e.currentTarget.style.color = "var(--text-dim)";
+        }}
+      >
+        📖 사용법 가이드
+      </Link>
     </div>
   );
 }

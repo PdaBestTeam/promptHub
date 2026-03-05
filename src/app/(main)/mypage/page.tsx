@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 
 interface MyPrompt {
@@ -44,8 +44,15 @@ interface UserInfo {
 
 export default function MypagePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, authFetch, logout, loading: authLoading } = useAuth();
-  const [tab, setTab] = useState<"written" | "scraps" | "profile">("written");
+  const initialTab = (searchParams.get("tab") as "written" | "scraps" | "profile") ?? "written";
+  const [tab, setTab] = useState<"written" | "scraps" | "profile">(initialTab);
+
+  function changeTab(t: "written" | "scraps" | "profile") {
+    setTab(t);
+    router.replace(`/mypage?tab=${t}`, { scroll: false });
+  }
   const [myPrompts, setMyPrompts] = useState<MyPrompt[]>([]);
   const [scraps, setScraps] = useState<ScrapItem[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -77,6 +84,13 @@ export default function MypagePage() {
     }
     load();
   }, [authLoading, user, authFetch, router]);
+
+  async function handleUnscrap(e: React.MouseEvent, promptId: string) {
+    e.stopPropagation();
+    await authFetch(`/api/prompts/${promptId}/scrap`, { method: "DELETE" });
+    setScraps((prev) => prev.filter((s) => s.prompt.id !== promptId));
+    setUserInfo((prev) => prev ? { ...prev, scrapCount: prev.scrapCount - 1 } : prev);
+  }
 
   async function handleDelete() {
     if (!deleteTargetId) return;
@@ -228,7 +242,7 @@ export default function MypagePage() {
           ).map(([key, label, count]) => (
             <button
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => changeTab(key)}
               style={{
                 padding: "8px 18px",
                 borderRadius: 8,
@@ -446,16 +460,25 @@ export default function MypagePage() {
                       onClick={() => router.push(`/prompts/${s.prompt.id}`)}
                       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent-border)")}
                       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, background: "var(--surface2)", flexShrink: 0 }}>♡</div>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, background: "var(--surface2)", flexShrink: 0 }}>♥</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.prompt.title}</div>
                         <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 12, flexWrap: "wrap" }}>
                           {s.category && <span>{s.category.name}</span>}
                           <span>by {s.author.nickname}</span>
                           <span>v{s.prompt.currentVersionNo}</span>
-                          <span>♡ {s.prompt.scrapCount}</span>
+                          <span>♥ {s.prompt.scrapCount}</span>
                         </div>
                       </div>
+                      <button
+                        onClick={(e) => handleUnscrap(e, s.prompt.id)}
+                        title="스크랩 취소"
+                        style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border)", background: "none", color: "var(--accent)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all .15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-dim)"; e.currentTarget.style.borderColor = "var(--accent-border)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "var(--border)"; }}
+                      >
+                        ♥
+                      </button>
                     </div>
                   ))}
                 </>

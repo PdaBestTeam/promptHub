@@ -405,7 +405,7 @@ export default function EditPromptPage() {
                 marginBottom: 12,
               }}
             >
-              삭제 시 모든 버전 히스토리가 함께 삭제됩니다. 되돌릴 수 없습니다.
+              삭제 시 되돌릴 수 없습니다.
             </div>
             <button
               type="button"

@@ -3,11 +3,7 @@
 
 import PromptListClient from "./prompt-list.client";
 import { db } from "@/lib/db/client";
-import {
-  promptsTable,
-  categoriesTable,
-  scrapsTable,
-} from "@/lib/db/schema";
+import { promptsTable, categoriesTable, scrapsTable } from "@/lib/db/schema";
 import * as authSchema from "@/lib/db/auth-schema";
 import { and, desc, eq, ilike, count, isNull } from "drizzle-orm";
 
@@ -17,8 +13,12 @@ interface SearchProps {
   sort?: string;
 }
 
-export default async function PromptList({ q = "", category = "", sort = "latest" }: SearchProps) {
-  // category slug 변환 (기존 API 로직 그대로)
+export default async function PromptList({
+  q = "",
+  category = "",
+  sort = "latest",
+}: SearchProps) {
+  // category slug 변환
   const resolvedCategory =
     category === "dev"
       ? "development"
@@ -38,10 +38,14 @@ export default async function PromptList({ q = "", category = "", sort = "latest
           ? desc(promptsTable.forkCount)
           : desc(promptsTable.createdAt);
 
-  const conditions = [eq(promptsTable.isPublic, true), isNull(promptsTable.parentPromptId)];
+  const conditions = [
+    eq(promptsTable.isPublic, true),
+    isNull(promptsTable.parentPromptId),
+  ];
   if (q) conditions.push(ilike(promptsTable.title, `%${q}%`));
   if (resolvedCategory) conditions.push(eq(categoriesTable.slug, resolvedCategory));
 
+  // 전체 건수
   const [countRow] = await db
     .select({ total: count() })
     .from(promptsTable)
@@ -49,6 +53,7 @@ export default async function PromptList({ q = "", category = "", sort = "latest
     .where(and(...conditions));
   const total = Number(countRow?.total ?? 0);
 
+  // 프롬프트 목록
   const rows = await db
     .select({
       id: promptsTable.id,
@@ -79,6 +84,7 @@ export default async function PromptList({ q = "", category = "", sort = "latest
     .limit(limit)
     .offset(offset);
 
+  // 카테고리 목록
   const categories = await db
     .select()
     .from(categoriesTable)

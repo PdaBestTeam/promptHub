@@ -27,11 +27,21 @@ DB_DSN   = "postgresql://postgres.teagtpusucaresoadgrg:L2PmpJJWRl17tnhh@aws-1-ap
 API_BASE  = "https://api.prpt.ai"
 SITE_BASE = "https://www.prpt.ai"
 
+# (slug, prpt.ai API category_id)
 CATEGORIES = {
     "개발":    ("development",    7),
     "고민해결": ("problem-solving", 14),
     "여행":    ("travel",         55),
     "일러스트": ("illustration",   19),
+    "글쓰기":  ("writing",        6),
+    "교육":    ("education",      8),
+    "마케팅":  ("marketing",      9),
+    "연구":    ("research",      10),
+    "업무":    ("work",          11),
+    "콘텐츠":  ("contents",      12),
+    "기타":    ("etc",           15),
+    "재미":    ("fun",           16),
+    "생활":    ("life",          17),
 }
 
 BOT_USER_ID    = "bot-prptai-crawler"
@@ -60,6 +70,13 @@ HEADERS = {
 # ─────────────────────────────────────────────
 def setup_db(conn) -> dict:
     cur = conn.cursor()
+
+    # model_name 컬럼이 없으면 추가
+    cur.execute("""
+        ALTER TABLE "promptHub".prompts
+        ADD COLUMN IF NOT EXISTS model_name varchar(200)
+    """)
+    log.info("model_name 컬럼 확인/추가 완료")
 
     cur.execute("""
         INSERT INTO public."user" (id, name, email, email_verified, created_at, updated_at)
@@ -169,6 +186,7 @@ def save_prompt(conn, item: dict, description: str | None, cat_db_id: int, resul
     result     = (result_from_page or str(item.get("RESULT") or "")).strip()
     view_count = int(item.get("VIEW_COUNT", 0) or 0)
     like_count = int(item.get("COUNT_FAVORITE", 0) or 0)
+    model_name = str(item.get("MODEL_NAME") or "").strip()[:200] or None  # ← 추가
     post_id    = item.get("POST_ID")
     platform   = item.get("PLATFORM_TYPE", "D")
     source_url = detail_url(post_id, platform)
@@ -188,10 +206,11 @@ def save_prompt(conn, item: dict, description: str | None, cat_db_id: int, resul
     cur.execute("""
         INSERT INTO "promptHub".prompts
             (author_id, category_id, title, content, description, result,
-             is_public, current_version_no, view_count, scrap_count, fork_count)
-        VALUES (%s, %s, %s, %s, %s, %s, TRUE, 1, %s, %s, 0)
+             model_name, is_public, current_version_no, view_count, scrap_count, fork_count)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE, 1, %s, %s, 0)
         RETURNING id
-    """, (BOT_USER_ID, cat_db_id, title, content, description, result or None, view_count, like_count))
+    """, (BOT_USER_ID, cat_db_id, title, content, description, result or None,
+          model_name, view_count, like_count))
     prompt_id = cur.fetchone()[0]
 
     cur.execute("""
@@ -200,7 +219,7 @@ def save_prompt(conn, item: dict, description: str | None, cat_db_id: int, resul
         VALUES (%s, 1, %s, %s, %s, %s)
     """, (
         prompt_id, title, content,
-        f"prpt.ai 크롤링 | 원본: {source_url}",
+        f"prpt.ai 크롤링 | 원본: {source_url}" + (f" | 모델: {model_name}" if model_name else ""),
         BOT_USER_ID,
     ))
 
@@ -235,10 +254,11 @@ async def main():
             stats[cat_name]["found"] = len(items)
 
             for i, item in enumerate(items, 1):
-                post_id  = item.get("POST_ID")
-                platform = item.get("PLATFORM_TYPE", "D")
-                title_preview = str(item.get("TITLE") or "")[:45]
-                log.info(f"[{cat_name}] {i}/{len(items)} id={post_id} ({platform}) | {title_preview}")
+                post_id   = item.get("POST_ID")
+                platform  = item.get("PLATFORM_TYPE", "D")
+                model_name = str(item.get("MODEL_NAME") or "")[:30]
+                title_preview = str(item.get("TITLE") or "")[:40]
+                log.info(f"[{cat_name}] {i}/{len(items)} id={post_id} ({platform}) [{model_name}] | {title_preview}")
 
                 # 상세 페이지에서 description, RESULT(결과) 수집
                 description, result_from_page = await fetch_description_and_result(detail_page, post_id, platform)
