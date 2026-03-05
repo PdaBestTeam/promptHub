@@ -545,6 +545,7 @@ export default function PromptListClient({
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     sessionStorage.setItem("prompt-detail-from-list", "1");
+                    sessionStorage.setItem("prompt-goto-latest", "1");
                     sessionStorage.setItem(
                       `prompt-scrap-${prompt.id}`,
                       String(prompt.isScrapped),

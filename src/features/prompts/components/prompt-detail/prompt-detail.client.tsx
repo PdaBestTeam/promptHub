@@ -67,6 +67,21 @@ export default function PromptDetailClient({
     return initialPrompt;
   });
 
+  // 목록에서 클릭 시 → fork 트리의 최신 버전으로 자동 이동
+  useEffect(() => {
+    if (typeof window === "undefined" || versions.length === 0) return;
+    const gotoLatest = sessionStorage.getItem("prompt-goto-latest");
+    if (!gotoLatest) return;
+    sessionStorage.removeItem("prompt-goto-latest");
+    const latestVer = versions.reduce((a, b) =>
+      a.versionNo > b.versionNo ? a : b,
+    );
+    if (Number(latestVer.id) !== Number(initialPrompt.id)) {
+      router.replace(`/prompts/${latestVer.id}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화 (id 바뀔 때마다 재조회, 조회수 미증가)
   useEffect(() => {
     if (authLoading || !user) return;
@@ -368,15 +383,6 @@ export default function PromptDetailClient({
                 {prompt.isScrapped ? "♥" : "♡"}{" "}
                 {prompt.isScrapped ? "스크랩됨" : "스크랩"}
               </button>
-              {isAuthor && (
-                <button
-                  className="btn-ghost"
-                  style={{ padding: "9px 16px" }}
-                  onClick={() => router.push(`/prompts/${id}/edit`)}
-                >
-                  ✏️ 수정
-                </button>
-              )}
               {isAuthor && (
                 <button
                   className="btn-ghost"

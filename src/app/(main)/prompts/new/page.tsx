@@ -60,8 +60,8 @@ function NewPromptContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) {
-      setError("제목과 내용은 필수입니다.");
+    if (!title.trim() || !categoryId || !content.trim()) {
+      setError("제목, 카테고리, 내용은 필수입니다.");
       return;
     }
     setSaving(true);
@@ -295,7 +295,7 @@ function NewPromptContent() {
                   marginBottom: 6,
                 }}
               >
-                카테고리
+                카테고리 <span style={{ color: "var(--accent)" }}>*</span>
               </label>
               <select
                 style={
@@ -317,7 +317,7 @@ function NewPromptContent() {
                   )
                 }
               >
-                <option value="">카테고리 선택 (선택사항)</option>
+                <option value="" disabled>카테고리를 선택해주세요</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -391,7 +391,8 @@ function NewPromptContent() {
                 borderBottom: "1px solid var(--border)",
               }}
             >
-              프롬프트 내용
+              프롬프트 내용{" "}
+              <span style={{ color: "var(--accent)", fontWeight: 700 }}>*</span>
             </div>
             <textarea
               style={
