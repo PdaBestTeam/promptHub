@@ -91,15 +91,13 @@ export default function PromptDetailClient({
     return match ?? versions[versions.length - 1] ?? null;
   });
   const selectedVerRef = useRef<Version | null>(selectedVer);
-  selectedVerRef.current = selectedVer;
-  const lastSyncedPromptIdRef = useRef<string | number | null>(null);
-  useEffect(() => {
-    const currentId = initialPrompt.id;
-    if (lastSyncedPromptIdRef.current === currentId) return;
-    lastSyncedPromptIdRef.current = currentId;
-    const match = versions.find((v) => Number(v.id) === Number(currentId));
+  useEffect(() => { selectedVerRef.current = selectedVer; }, [selectedVer]);
+  const [prevPromptId, setPrevPromptId] = useState<string | number>(initialPrompt.id);
+  if (prevPromptId !== initialPrompt.id) {
+    setPrevPromptId(initialPrompt.id);
+    const match = versions.find((v) => Number(v.id) === Number(initialPrompt.id));
     setSelectedVer(match ?? versions[versions.length - 1] ?? null);
-  }, [initialPrompt.id, versions]);
+  }
   function selectVersion(v: Version) {
     if (Number(v.id) === Number(id)) return;
     selectedVerRef.current = v;
@@ -110,6 +108,7 @@ export default function PromptDetailClient({
   const [showForkModal, setShowForkModal] = useState(false);
   const [forkTitle, setForkTitle] = useState("");
   const [forking, setForking] = useState(false);
+  const [fetchingForkDraft, setFetchingForkDraft] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -310,8 +309,18 @@ export default function PromptDetailClient({
                     /\s*\(Fork v\d+\)$/,
                     ""
                   );
-                  setForkTitle(`${base} (Fork v${prompt.nextForkVersionNo})`);
-                  setShowForkModal(true);
+                  // API 먼저 호출해서 실제 버전 번호 포함된 제목 받기
+                  setFetchingForkDraft(true);
+                  authFetch(`/api/prompts/${id}/fork`, {
+                    method: "POST",
+                    body: JSON.stringify({ draftOnly: true }),
+                  })
+                    .then((r) => r.json())
+                    .then((data) => {
+                      setForkTitle(data.title ?? "");
+                      setShowForkModal(true);
+                    })
+                    .finally(() => setFetchingForkDraft(false));
                 }}
                 style={{
                   display: "inline-flex",
@@ -332,7 +341,7 @@ export default function PromptDetailClient({
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
                 <GitFork size={14} style={{ flexShrink: 0 }} />
-                Fork하기
+                {fetchingForkDraft ? "로딩 중..." : "Fork하기"}
               </button>
               <button
                 onClick={toggleScrap}
@@ -911,7 +920,7 @@ export default function PromptDetailClient({
             >
               원본:{" "}
               <strong style={{ color: "var(--text)" }}>
-                {(selectedVerRef.current ?? selectedVer)?.title ?? prompt.title}
+                {selectedVer?.title ?? prompt.title}
               </strong>
               <br />이 프롬프트를 Fork하여 나만의 버전으로 개선하세요.
             </div>
@@ -933,7 +942,7 @@ export default function PromptDetailClient({
                 className="form-input"
                 value={forkTitle}
                 onChange={(e) => setForkTitle(e.target.value)}
-                placeholder={`${((selectedVerRef.current ?? selectedVer)?.title ?? prompt.title).replace(/\s*\(Fork v\d+\)$/, "")} (Fork v${prompt.nextForkVersionNo})`}
+                placeholder={`${(selectedVer?.title ?? prompt.title).replace(/\s*\(Fork v\d+\)$/, "")} (Fork v${prompt.nextForkVersionNo})`}
               />
             </div>
             <div

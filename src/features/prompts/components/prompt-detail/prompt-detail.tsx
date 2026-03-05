@@ -10,7 +10,7 @@ import {
   usersTable,
   promptVersionsTable,
 } from "@/lib/db/schema";
-import { eq, asc, sql } from "drizzle-orm";
+import { eq, asc, sql, inArray } from "drizzle-orm";
 
 export default async function PromptDetail({ id }: { id: string }) {
   const promptId = Number(id);
@@ -56,24 +56,90 @@ export default async function PromptDetail({ id }: { id: string }) {
     .set({ viewCount: sql`${promptsTable.viewCount} + 1` })
     .where(eq(promptsTable.id, promptId));
 
-  // 버전 목록 조회
-  const versions = await db
+  // ── 포크 트리 전체 버전 목록 조회 (main 브랜치와 동일한 방식) ──────────────
+  // 1. 루트 찾기
+  let root: { id: number; parentPromptId: number | null } = {
+    id: prompt.id,
+    parentPromptId: prompt.parentPromptId as number | null,
+  };
+  while (root.parentPromptId != null) {
+    const [parent] = await db
+      .select({ id: promptsTable.id, parentPromptId: promptsTable.parentPromptId })
+      .from(promptsTable)
+      .where(eq(promptsTable.id, root.parentPromptId))
+      .limit(1);
+    if (!parent) break;
+    root = parent;
+  }
+
+  // 2. 트리 내 모든 프롬프트 ID 수집
+  const treeIds = new Set<number>([root.id]);
+  let levelIds: number[] = [root.id];
+  while (levelIds.length > 0) {
+    const children = await db
+      .select({ id: promptsTable.id })
+      .from(promptsTable)
+      .where(inArray(promptsTable.parentPromptId, levelIds));
+    const newIds = children.map((c) => c.id).filter((id) => !treeIds.has(id));
+    newIds.forEach((id) => treeIds.add(id));
+    levelIds = newIds;
+  }
+
+  // 3. 트리 노드를 버전으로 조회
+  const ids = Array.from(treeIds);
+  const rows = await db
     .select({
-      id: promptVersionsTable.id,
+      id: promptsTable.id,
+      versionNo: promptsTable.currentVersionNo,
+      title: promptsTable.title,
+      content: promptsTable.content,
+      createdAt: promptsTable.createdAt,
+      authorId: promptsTable.authorId,
+    })
+    .from(promptsTable)
+    .where(inArray(promptsTable.id, ids))
+    .orderBy(asc(promptsTable.currentVersionNo));
+
+  // 4. 작성자 정보
+  const userIds = [...new Set(rows.map((r) => r.authorId))];
+  const users =
+    userIds.length === 0
+      ? []
+      : await db
+          .select({ id: usersTable.id, name: usersTable.name })
+          .from(usersTable)
+          .where(inArray(usersTable.id, userIds));
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  // 5. changeNote 조회
+  const versionNotes = await db
+    .select({
+      promptId: promptVersionsTable.promptId,
       versionNo: promptVersionsTable.versionNo,
-      title: promptVersionsTable.title,
-      content: promptVersionsTable.content,
       changeNote: promptVersionsTable.changeNote,
-      createdAt: promptVersionsTable.createdAt,
-      editor: {
-        id: usersTable.id,
-        nickname: usersTable.name,
-      },
     })
     .from(promptVersionsTable)
-    .innerJoin(usersTable, eq(promptVersionsTable.editedBy, usersTable.id))
-    .where(eq(promptVersionsTable.promptId, promptId))
-    .orderBy(asc(promptVersionsTable.versionNo));
+    .where(inArray(promptVersionsTable.promptId, rows.map((r) => r.id)));
+  const noteMap = new Map(
+    versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote])
+  );
+
+  const versions = rows.map((r) => {
+    const memo = noteMap.get(`${r.id}-${r.versionNo}`);
+    const defaultNote = r.versionNo === 1 ? "원본" : `Fork v${r.versionNo}`;
+    return {
+      id: String(r.id),
+      versionNo: r.versionNo,
+      title: r.title,
+      content: r.content,
+      changeNote: memo ?? defaultNote,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+      editor: {
+        id: userMap.get(r.authorId)?.id ?? r.authorId,
+        nickname: userMap.get(r.authorId)?.name ?? "",
+      },
+    };
+  });
 
   return (
     <PromptDetailClient
@@ -94,11 +160,7 @@ export default async function PromptDetail({ id }: { id: string }) {
         category: prompt.category,
         author: prompt.author,
       }}
-      versions={versions.map((v) => ({
-        ...v,
-        id: String(v.id),
-        createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
-      }))}
+      versions={versions}
     />
   );
 }
