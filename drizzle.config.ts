@@ -2,7 +2,6 @@ import { config } from "dotenv";
 
 import { defineConfig } from "drizzle-kit";
 
-// drizzle-kit 실행 시 .env를 먼저 로드해서 DATABASE_URL을 읽는다.
 config({ path: ".env" });
 
 export default defineConfig({

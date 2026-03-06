@@ -1,6 +1,5 @@
 name: Deploy to Production (Blue/Green)
 
-# ── 트리거: prod 브랜치 push 시에만 실행 ─────────────────────────────────────
 on:
   push:
     branches:
@@ -18,20 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # GHCR push 권한
+      packages: write
 
     steps:
-      # ── 1. 소스 체크아웃 ──────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 1-1. 소문자 이미지 이름 계산 (GHCR은 소문자만 허용) ─────────────
       - name: Set lowercase image name
         run: |
           IMAGE_NAME=$(echo "${{ github.repository }}/prompthub" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
 
-      # ── 2. GHCR 로그인 ────────────────────────────────────────────────────
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -39,7 +35,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── 3. Docker 메타데이터 (태그/라벨 자동 생성) ───────────────────────
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -49,7 +44,6 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
 
-      # ── 4. Docker 빌드 & GHCR push ───────────────────────────────────────
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -58,7 +52,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # ── 5. deploy 스크립트를 EC2에 SCP 업로드 ───────────────────────────
       - name: Upload bg-deploy.sh to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -67,17 +60,16 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: deploy/bg-deploy.sh
           target: ${{ env.DEPLOY_DIR }}
-          # 업로드 후 디렉터리 구조 유지: DEPLOY_DIR/deploy/bg-deploy.sh
+
           strip_components: 1
 
-      # ── 6. SSH: .env.production 생성 → 이미지 pull → 배포 실행 ──────────
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # 타임아웃 (초)
+
           command_timeout: 300s
           script: |
             set -euo pipefail

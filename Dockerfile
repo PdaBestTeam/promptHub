@@ -1,13 +1,13 @@
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# ── 1단계: 의존성 설치 ─────────────────────────────────────────────────────────
+
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# ── 2단계: 빌드 ───────────────────────────────────────────────────────────────
+
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -15,7 +15,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
-# ── 3단계: 프로덕션 런타임 이미지 ─────────────────────────────────────────────
+
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
