@@ -56,13 +56,7 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   fun: "🎉",
   life: "🏠",
 };
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  illustration: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  development: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  "problem-solving": "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
-  travel: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-  default: "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
-};
+
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
   development: "코딩·기술",
@@ -148,9 +142,11 @@ const DEFAULT_BADGE = {
   border: "rgba(95, 105, 120, 0.35)",
   text: "rgb(65, 75, 90)",
 };
-function getModelBadgeStyle(
-  modelName: string
-): { bg: string; border: string; text: string } {
+function getModelBadgeStyle(modelName: string): {
+  bg: string;
+  border: string;
+  text: string;
+} {
   const key = modelName.trim().toLowerCase().replace(/\s+/g, " ");
   return (
     MODEL_BADGE_STYLES[key] ??
@@ -159,12 +155,16 @@ function getModelBadgeStyle(
   );
 }
 
-function resolveCategoryKey(slug?: string | null, name?: string | null): string {
+function resolveCategoryKey(
+  slug?: string | null,
+  name?: string | null,
+): string {
   const s = (slug ?? "").trim().toLowerCase();
   const n = (name ?? "").trim().toLowerCase();
 
   if (!s && !n) return "";
-  if (s === "development" || s === "dev" || s === "개발" || n === "개발") return "development";
+  if (s === "development" || s === "dev" || s === "개발" || n === "개발")
+    return "development";
   if (
     s === "problem-solving" ||
     s === "problem_solving" ||
@@ -174,7 +174,8 @@ function resolveCategoryKey(slug?: string | null, name?: string | null): string 
   ) {
     return "problem-solving";
   }
-  if (s === "illustration" || s === "일러스트" || n === "일러스트") return "illustration";
+  if (s === "illustration" || s === "일러스트" || n === "일러스트")
+    return "illustration";
   if (s === "travel" || s === "여행" || n === "여행") return "travel";
   return s;
 }
@@ -358,119 +359,120 @@ export default function PromptListClient({
       {/* Category Cards — 우측 페이드로 스크롤 가능 암시 */}
       <div style={{ position: "relative", marginBottom: 24 }}>
         <div
-          style={{
-            display: "flex",
-            gap: 10,
-            overflowX: "auto",
-            paddingTop: 4,
-            paddingBottom: 6,
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "thin",
-            scrollbarColor: "var(--border) transparent",
-          } as React.CSSProperties}
+          style={
+            {
+              display: "flex",
+              gap: 10,
+              overflowX: "auto",
+              paddingTop: 4,
+              paddingBottom: 6,
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "thin",
+              scrollbarColor: "var(--border) transparent",
+            } as React.CSSProperties
+          }
         >
-
-        {allCategories.map((cat) => {
-          const catKey = resolveCategoryKey(cat.slug, cat.name);
-          const isActive = category === cat.slug;
-          const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
-          const desc = CATEGORY_DESCS[catKey] ?? "";
-          return (
-            <button
-              key={cat.id}
-              onClick={() =>
-                handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
-              }
-              style={{
-                flexShrink: 0,
-                width: "calc((100% - 40px) / 5)",
-                minWidth: 100,
-                scrollSnapAlign: "start",
-                position: "relative",
-                padding: "14px 12px 12px",
-                borderRadius: 14,
-                border: `2px solid ${isActive ? "var(--accent)" : "var(--border)"}`,
-                fontSize: 12,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                background: isActive ? "var(--accent-dim)" : "var(--surface)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 6,
-                transition: "all 0.2s ease",
-                transform: isActive ? "translateY(-2px)" : "none",
-                boxShadow: isActive
-                  ? "0 6px 20px var(--accent-border)"
-                  : "none",
-                overflow: "hidden",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.borderColor = "var(--border-hover)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 14px rgba(0,0,0,0.08)";
+          {allCategories.map((cat) => {
+            const catKey = resolveCategoryKey(cat.slug, cat.name);
+            const isActive = category === cat.slug;
+            const emoji = CATEGORY_EMOJIS[catKey] ?? "✨";
+            const desc = CATEGORY_DESCS[catKey] ?? "";
+            return (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  handleFilter(q, cat.slug === category ? "" : cat.slug, sort)
                 }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.borderColor = "var(--border)";
-                  e.currentTarget.style.transform = "none";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
-            >
-              {/* Gradient bar on top (비활성화: 색상 미표시) */}
-              <div
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 3,
-                  background: "transparent",
-                  borderRadius: "14px 14px 0 0",
-                  transition: "all 0.2s ease",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 26,
-                  lineHeight: 1,
-                  filter: isActive
-                    ? "drop-shadow(0 2px 6px rgba(0,0,0,0.15))"
-                    : "none",
-                  transition: "filter 0.2s",
-                }}
-              >
-                {cat.slug === "" ? "🌐" : emoji}
-              </span>
-              <span
-                style={{
-                  fontWeight: isActive ? 700 : 600,
-                  color: isActive ? "var(--accent)" : "var(--text)",
+                  flexShrink: 0,
+                  width: "calc((100% - 40px) / 5)",
+                  minWidth: 100,
+                  scrollSnapAlign: "start",
+                  position: "relative",
+                  padding: "14px 12px 12px",
+                  borderRadius: 14,
+                  border: `2px solid ${isActive ? "var(--accent)" : "var(--border)"}`,
                   fontSize: 12,
-                  letterSpacing: "-0.2px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  background: isActive ? "var(--accent-dim)" : "var(--surface)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                  transition: "all 0.2s ease",
+                  transform: isActive ? "translateY(-2px)" : "none",
+                  boxShadow: isActive
+                    ? "0 6px 20px var(--accent-border)"
+                    : "none",
+                  overflow: "hidden",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.borderColor = "var(--border-hover)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 14px rgba(0,0,0,0.08)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.transform = "none";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
                 }}
               >
-                {cat.name}
-              </span>
-              {desc && (
+                {/* Gradient bar on top (비활성화: 색상 미표시) */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background: "transparent",
+                    borderRadius: "14px 14px 0 0",
+                    transition: "all 0.2s ease",
+                  }}
+                />
                 <span
                   style={{
-                    fontSize: 10,
-                    color: isActive ? "var(--accent)" : "var(--text-muted)",
-                    opacity: 0.8,
+                    fontSize: 26,
+                    lineHeight: 1,
+                    filter: isActive
+                      ? "drop-shadow(0 2px 6px rgba(0,0,0,0.15))"
+                      : "none",
+                    transition: "filter 0.2s",
                   }}
                 >
-                  {desc}
+                  {cat.slug === "" ? "🌐" : emoji}
                 </span>
-              )}
-            </button>
-          );
-        })}
+                <span
+                  style={{
+                    fontWeight: isActive ? 700 : 600,
+                    color: isActive ? "var(--accent)" : "var(--text)",
+                    fontSize: 12,
+                    letterSpacing: "-0.2px",
+                  }}
+                >
+                  {cat.name}
+                </span>
+                {desc && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: isActive ? "var(--accent)" : "var(--text-muted)",
+                      opacity: 0.8,
+                    }}
+                  >
+                    {desc}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
         {/* 우측 그라데이션 페이드 — 더 스크롤 가능함을 암시 */}
         <div
@@ -566,29 +568,32 @@ export default function PromptListClient({
                     background: bg,
                   }}
                 >
-                  {prompt.modelName && (() => {
-                    const { bg, border, text } = getModelBadgeStyle(prompt.modelName);
-                    return (
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: 9,
-                          left: 9,
-                          padding: "4px 9px",
-                          borderRadius: 20,
-                          background: bg,
-                          border: `1px solid ${border}`,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: text,
-                          letterSpacing: "0.04em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {prompt.modelName}
-                      </span>
-                    );
-                  })()}
+                  {prompt.modelName &&
+                    (() => {
+                      const { bg, border, text } = getModelBadgeStyle(
+                        prompt.modelName,
+                      );
+                      return (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 9,
+                            left: 9,
+                            padding: "4px 9px",
+                            borderRadius: 20,
+                            background: bg,
+                            border: `1px solid ${border}`,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: text,
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {prompt.modelName}
+                        </span>
+                      );
+                    })()}
                   <span style={{ fontSize: 44, lineHeight: 1 }}>{emoji}</span>
                   {prompt.parentPromptId && (
                     <span
@@ -605,7 +610,10 @@ export default function PromptListClient({
                         fontWeight: 600,
                       }}
                     >
-                      <GitFork size={10} style={{ verticalAlign: "middle", marginRight: 2 }} />
+                      <GitFork
+                        size={10}
+                        style={{ verticalAlign: "middle", marginRight: 2 }}
+                      />
                       Fork
                     </span>
                   )}
@@ -735,7 +743,13 @@ export default function PromptListClient({
                         ♡ {prompt.scrapCount}
                       </span>
                       <span
-                        style={{ fontSize: 11, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 2 }}
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-muted)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
                       >
                         <GitFork size={11} />
                         {prompt.forkCount}

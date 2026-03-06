@@ -41,7 +41,7 @@ function NewPromptContent() {
     fetch("/api/categories")
       .then((r) => r.json())
       .then((d) => setCategories(d.data ?? []));
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     if (!fromForkId || !user) return;
@@ -56,7 +56,7 @@ function NewPromptContent() {
         if (d.nextVersionNo != null) setNextVersionNoOnSave(d.nextVersionNo);
       })
       .finally(() => setLoading(false));
-  }, [fromForkId, user]);
+  }, [fromForkId, user, authFetch]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -317,7 +317,9 @@ function NewPromptContent() {
                   )
                 }
               >
-                <option value="" disabled>카테고리를 선택해주세요</option>
+                <option value="" disabled>
+                  카테고리를 선택해주세요
+                </option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
