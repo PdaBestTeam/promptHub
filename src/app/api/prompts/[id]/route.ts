@@ -6,6 +6,7 @@ import {
   usersTable,
   promptVersionsTable,
   scrapsTable,
+  promptImagesTable,
 } from "@/lib/db/schema";
 import { getAuthUser, forbidden, notFound } from "@/lib/http/auth-middleware";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
@@ -125,8 +126,16 @@ export async function GET(
       ? prompt.currentVersionNo + 1
       : prompt.currentVersionNo;
 
+  const promptImages = await db
+    .select({ imageUrl: promptImagesTable.imageUrl })
+    .from(promptImagesTable)
+    .where(eq(promptImagesTable.promptId, promptId))
+    .orderBy(promptImagesTable.orderIndex);
+  const imageUrls = promptImages.map(img => img.imageUrl);
+
   return Response.json({
     ...prompt,
+    imageUrls,
     isScrapped,
     nextForkVersionNo,
     nextVersionNoOnSave,
@@ -163,6 +172,7 @@ export async function PATCH(
     isPublic,
     changeNote,
     result,
+    imageUrls,
     modelName,
   } = await request.json();
 
@@ -191,6 +201,19 @@ export async function PATCH(
     changeNote: changeNote ?? null,
     editedBy: auth.userId,
   });
+
+  if (imageUrls !== undefined && Array.isArray(imageUrls)) {
+    await db.delete(promptImagesTable).where(eq(promptImagesTable.promptId, promptId));
+    if (imageUrls.length > 0) {
+      await db.insert(promptImagesTable).values(
+        imageUrls.map((url, idx) => ({
+          promptId,
+          imageUrl: url,
+          orderIndex: idx,
+        }))
+      );
+    }
+  }
 
   return Response.json(updated);
 }

@@ -5,10 +5,11 @@ import {
   categoriesTable,
   scrapsTable,
   promptVersionsTable,
+  promptImagesTable,
 } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/http/auth-middleware";
 import * as authSchema from "@/lib/db/auth-schema";
-import { and, desc, eq, ilike, count, isNull } from "drizzle-orm";
+import { and, desc, eq, ilike, count, isNull, inArray } from "drizzle-orm";
 
 // GET /api/prompts?q=&category=&sort=latest|views|scraps|forks&page=&limit=
 export async function GET(request: NextRequest) {
@@ -94,7 +95,20 @@ export async function GET(request: NextRequest) {
     scrappedIds = new Set(userScraps.map((s) => s.promptId));
   }
 
-  const data = rows.map((r) => ({ ...r, isScrapped: scrappedIds.has(r.id) }));
+  let promptImages: { promptId: number; imageUrl: string }[] = [];
+  const promptIds = rows.map((r) => r.id);
+  if (promptIds.length > 0) {
+    promptImages = await db
+      .select({ promptId: promptImagesTable.promptId, imageUrl: promptImagesTable.imageUrl })
+      .from(promptImagesTable)
+      .where(inArray(promptImagesTable.promptId, promptIds));
+  }
+
+  const data = rows.map((r) => ({
+    ...r,
+    isScrapped: scrappedIds.has(r.id),
+    images: promptImages.filter(i => i.promptId === r.id).map(i => i.imageUrl),
+  }));
 
   return Response.json({ data, page, limit, total });
 }
@@ -112,6 +126,7 @@ export async function POST(request: NextRequest) {
       categoryId,
       isPublic,
       result,
+      imageUrls,
       modelName,
     } = await request.json();
 
@@ -145,6 +160,16 @@ export async function POST(request: NextRequest) {
       changeNote: "최초 작성",
       editedBy: auth.userId,
     });
+
+    if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
+      await db.insert(promptImagesTable).values(
+        imageUrls.map((url, index) => ({
+          promptId: prompt.id,
+          imageUrl: url,
+          orderIndex: index,
+        }))
+      );
+    }
 
     return Response.json(prompt, { status: 201 });
   } catch (e) {

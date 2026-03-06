@@ -51,18 +51,20 @@ export const promptsTable = appSchema.table(
     viewCount: integer("view_count").notNull().default(0),
     scrapCount: integer("scrap_count").notNull().default(0),
     forkCount: integer("fork_count").notNull().default(0),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+      .notNull()
+      .$onUpdate(() => new Date()),
   },
-  (table) => [
-    index("prompts_author_id_idx").on(table.authorId),
-    index("prompts_category_id_idx").on(table.categoryId),
-    index("prompts_created_at_idx").on(table.createdAt),
-    index("prompts_title_idx").on(table.title),
-  ],
+  (table) => ({
+    authorIdIdx: index("prompt_author_id_idx").on(table.authorId),
+    categoryIdIdx: index("prompt_category_id_idx").on(table.categoryId),
+    parentPromptIdIdx: index("prompt_parent_prompt_id_idx").on(
+      table.parentPromptId,
+    ),
+  }),
 );
 
 export const promptVersionsTable = appSchema.table(
@@ -78,10 +80,28 @@ export const promptVersionsTable = appSchema.table(
     changeNote: text("change_note"),
     editedBy: text("edited_by")
       .notNull()
-      .references(() => authSchema.user.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("prompt_versions_prompt_id_idx").on(table.promptId)],
+  (table) => ({
+    promptIdIdx: index("prompt_versions_prompt_id_idx").on(table.promptId),
+  }),
+);
+
+export const promptImagesTable = appSchema.table(
+  "prompt_images",
+  {
+    id: serial("id").primaryKey(),
+    promptId: integer("prompt_id")
+      .notNull()
+      .references(() => promptsTable.id, { onDelete: "cascade" }),
+    imageUrl: varchar("image_url", { length: 1000 }).notNull(),
+    orderIndex: integer("order_index").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    promptIdIdx: index("prompt_image_prompt_id_idx").on(table.promptId),
+  })
 );
 
 export const scrapsTable = appSchema.table(
@@ -89,18 +109,15 @@ export const scrapsTable = appSchema.table(
   {
     userId: text("user_id")
       .notNull()
-      .references(() => authSchema.user.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     promptId: integer("prompt_id")
       .notNull()
       .references(() => promptsTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    primaryKey({
-      columns: [table.userId, table.promptId],
-      name: "scraps_pk",
-    }),
-    index("scraps_user_id_idx").on(table.userId),
-    index("scraps_prompt_id_idx").on(table.promptId),
-  ],
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.promptId] }),
+    userIdIdx: index("scrap_user_id_idx").on(table.userId),
+    promptIdIdx: index("scrap_prompt_id_idx").on(table.promptId),
+  }),
 );

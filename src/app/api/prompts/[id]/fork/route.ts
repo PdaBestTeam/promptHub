@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
-import { promptsTable, promptVersionsTable } from "@/lib/db/schema";
+import { promptsTable, promptVersionsTable, promptImagesTable } from "@/lib/db/schema";
 import {
   getAuthUser,
   unauthorized,
@@ -46,6 +46,12 @@ export async function POST(
     .limit(1);
   if (!source) return notFound("프롬프트를 찾을 수 없습니다.");
 
+  const sourceImages = await db
+    .select()
+    .from(promptImagesTable)
+    .where(eq(promptImagesTable.promptId, promptId))
+    .orderBy(promptImagesTable.orderIndex);
+
   const body = await request.json().catch(() => ({}));
 
   let root = source;
@@ -75,6 +81,9 @@ export async function POST(
       content: source.content,
       description: source.description ?? "",
       categoryId: source.categoryId,
+      result: source.result ?? "",
+      imageUrls: sourceImages.map((img) => img.imageUrl),
+      modelName: source.modelName ?? "",
     });
   }
 
@@ -86,6 +95,7 @@ export async function POST(
       categoryId,
       changeNote,
       result,
+      imageUrls,
       modelName,
     } = body;
     if (!title?.trim() || !content?.trim()) {
@@ -121,6 +131,17 @@ export async function POST(
       editedBy: auth.userId,
     });
 
+    const finalImageUrls = Array.isArray(imageUrls) ? imageUrls : sourceImages.map((img) => img.imageUrl);
+    if (finalImageUrls.length > 0) {
+      await db.insert(promptImagesTable).values(
+        finalImageUrls.map((url, idx) => ({
+          promptId: forked.id,
+          imageUrl: url,
+          orderIndex: idx,
+        }))
+      );
+    }
+
     await db
       .update(promptsTable)
       .set({ forkCount: sql`${promptsTable.forkCount} + 1` })
@@ -139,6 +160,7 @@ export async function POST(
       title,
       content: source.content,
       description: source.description,
+      result: source.result,
       isPublic: true,
       parentPromptId: source.id,
       forkedFromVersionId: body.fromVersionId ?? null,
@@ -154,6 +176,16 @@ export async function POST(
     changeNote: `"${source.title}"에서 Fork`,
     editedBy: auth.userId,
   });
+
+    if (sourceImages.length > 0) {
+      await db.insert(promptImagesTable).values(
+        sourceImages.map((img) => ({
+          promptId: forked.id,
+          imageUrl: img.imageUrl,
+          orderIndex: img.orderIndex,
+        }))
+      );
+    }
 
   await db
     .update(promptsTable)

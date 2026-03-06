@@ -1,0 +1,1 @@
+ALTER TABLE "promptHub"."prompts" ADD COLUMN "result_image_url" varchar(1000);

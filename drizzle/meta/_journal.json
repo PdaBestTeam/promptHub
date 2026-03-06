@@ -36,6 +36,20 @@
       "when": 1772685906260,
       "tag": "0004_narrow_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772803366544,
+      "tag": "0005_outgoing_captain_midlands",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772808384039,
+      "tag": "0006_steep_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

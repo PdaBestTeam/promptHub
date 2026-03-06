@@ -23,6 +23,9 @@ function NewPromptContent() {
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [modelName, setModelName] = useState("");
   const [result, setResult] = useState("");
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [sourceVersionNo, setSourceVersionNo] = useState<number | null>(null);
   const [nextVersionNoOnSave, setNextVersionNoOnSave] = useState<number | null>(
     null,
@@ -52,6 +55,9 @@ function NewPromptContent() {
         if (d.content != null) setContent(d.content);
         if (d.description != null) setDescription(d.description);
         if (d.categoryId != null) setCategoryId(d.categoryId);
+        if (d.result != null) setResult(d.result);
+        if (d.modelName != null) setModelName(d.modelName);
+        if (d.imageUrls != null) setExistingImageUrls(d.imageUrls);
         if (d.sourceVersionNo != null) setSourceVersionNo(d.sourceVersionNo);
         if (d.nextVersionNo != null) setNextVersionNoOnSave(d.nextVersionNo);
       })
@@ -66,6 +72,31 @@ function NewPromptContent() {
     }
     setSaving(true);
     setError("");
+
+    let finalImageUrls = [...existingImageUrls];
+    if (newImageFiles.length > 0) {
+      try {
+        const formData = new FormData();
+        newImageFiles.forEach((f) => formData.append("files", f));
+        const upRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (upRes.ok) {
+          const upData = await upRes.json();
+          finalImageUrls = [...finalImageUrls, ...(upData.urls || [])];
+        } else {
+          setError("이미지 업로드에 실패했습니다.");
+          setSaving(false);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setError("이미지 업로드 중 오류가 발생했습니다.");
+        setSaving(false);
+        return;
+      }
+    }
     if (fromForkId) {
       const res = await authFetch(`/api/prompts/${fromForkId}/fork`, {
         method: "POST",
@@ -76,6 +107,7 @@ function NewPromptContent() {
           description: description.trim() || null,
           categoryId: categoryId || null,
           result: result.trim() || null,
+          imageUrls: finalImageUrls,
           modelName: modelName.trim() || null,
           changeNote: changeNote.trim() || "Fork 후 저장",
         }),
@@ -97,6 +129,7 @@ function NewPromptContent() {
         content,
         categoryId: categoryId || null,
         result: result.trim() || null,
+        imageUrls: finalImageUrls,
         modelName: modelName.trim() || null,
         isPublic: true,
       }),
@@ -474,6 +507,63 @@ function NewPromptContent() {
               value={result}
               onChange={(e) => setResult(e.target.value)}
             />
+            
+            <div style={{ marginTop: 18 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--text-dim)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".7px",
+                  marginBottom: 6,
+                }}
+              >
+                결과 이미지 <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400, textTransform: "none" }}>(선택)</span>
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length > 0) {
+                    setNewImageFiles((prev) => [...prev, ...files]);
+                    setNewImagePreviews((prev) => [
+                      ...prev,
+                      ...files.map((f) => URL.createObjectURL(f)),
+                    ]);
+                  }
+                  e.target.value = "";
+                }}
+                style={{
+                  ...inputStyle,
+                  cursor: "pointer",
+                } as React.CSSProperties}
+              />
+              <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {existingImageUrls.map((url, i) => (
+                  <div key={`exist-${i}`} style={{position: "relative", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden"}}>
+                    <img src={url} alt="기존 미리보기" style={{ display: "block", height: 100, objectFit: "contain" }} />
+                    <button type="button" onClick={() => setExistingImageUrls(prev => prev.filter((_, idx) => idx !== i))} style={{position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12}}>✕</button>
+                  </div>
+                ))}
+                {newImagePreviews.map((url, i) => (
+                  <div key={`new-${i}`} style={{position: "relative", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden"}}>
+                    <img src={url} alt="새 미리보기" style={{ display: "block", height: 100, objectFit: "contain" }} />
+                    <button type="button" onClick={() => {
+                      setNewImageFiles(prev => prev.filter((_, idx) => idx !== i));
+                      setNewImagePreviews(prev => {
+                        const newPreviews = prev.filter((_, idx) => idx !== i);
+                        URL.revokeObjectURL(prev[i]); // Clean up memory
+                        return newPreviews;
+                      });
+                    }} style={{position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12}}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {isForkDraft && (

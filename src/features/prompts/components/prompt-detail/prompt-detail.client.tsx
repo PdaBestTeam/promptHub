@@ -23,8 +23,10 @@ interface PromptDetailData {
   id: string;
   title: string;
   content: string;
-  description: string | null;
+  description?: string | null;
   result?: string | null;
+  imageUrls?: string[];
+  modelName?: string | null;
   isPublic: boolean;
   currentVersionNo: number;
   viewCount: number;
@@ -86,14 +88,19 @@ export default function PromptDetailClient({
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data.isScrapped !== undefined || data.result !== undefined) {
-          setPrompt((p) => ({
-            ...p,
+        // isScrapped나 result나 imageUrls가 새로 들어오면 업데이트
+        if (data.isScrapped !== undefined || data.result !== undefined || data.imageUrls !== undefined || data.modelName !== undefined) {
+          setPrompt((prev) => ({
+            ...prev,
             ...(data.isScrapped !== undefined && {
               isScrapped: data.isScrapped,
               scrapCount: data.scrapCount,
             }),
             ...(data.result !== undefined && { result: data.result ?? null }),
+            ...(data.imageUrls !== undefined && { imageUrls: data.imageUrls ?? [] }),
+            ...(data.modelName !== undefined && {
+              modelName: data.modelName ?? null,
+            }),
           }));
         }
       })
@@ -232,7 +239,8 @@ export default function PromptDetailClient({
   }
 
   return (
-    <div style={{ paddingTop: 60 }}>
+    <>
+      <div style={{ paddingTop: 60 }}>
       <div
         style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 36px 80px" }}
       >
@@ -267,53 +275,47 @@ export default function PromptDetailClient({
 
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 300px",
-            gap: 28,
-            alignItems: "start",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            marginBottom: 12,
           }}
         >
-          <div style={{ minWidth: 0 }}>
-            <div
+          {prompt.parentPromptId && (
+            <span
+              className="badge badge-fork"
               style={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-                marginBottom: 12,
+                gap: 4,
               }}
             >
-              {prompt.parentPromptId && (
-                <span
-                  className="badge badge-fork"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  <GitFork size={12} />
-                  Fork
-                </span>
-              )}
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                {new Date(prompt.createdAt).toLocaleDateString("ko-KR")}
-              </span>
-            </div>
+              <GitFork size={12} />
+              Fork
+            </span>
+          )}
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {new Date(prompt.createdAt).toLocaleDateString("ko-KR")}
+          </span>
+        </div>
 
-            <h1
-              style={{
-                fontFamily: "'Syne',sans-serif",
-                fontWeight: 800,
-                fontSize: "clamp(20px,2.5vw,30px)",
-                letterSpacing: "-.8px",
-                lineHeight: 1.2,
-                color: "var(--text)",
-                marginBottom: 10,
-              }}
-            >
-              {displayTitle}
-            </h1>
+        <h1
+          style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 800,
+            fontSize: "clamp(20px,2.5vw,30px)",
+            letterSpacing: "-.8px",
+            lineHeight: 1.2,
+            color: "var(--text)",
+            marginBottom: 20,
+          }}
+        >
+          {displayTitle}
+        </h1>
+
+        <div className="detail-layout-grid">
+          <div className="detail-main-content" style={{ minWidth: 0 }}>
             {prompt.description && (
               <p
                 style={{
@@ -530,7 +532,7 @@ export default function PromptDetailClient({
               </div>
             </div>
 
-            {prompt.result && (
+            {(prompt.result || (prompt.imageUrls && prompt.imageUrls.length > 0)) && (
               <div
                 style={{
                   background: "var(--surface)",
@@ -569,7 +571,19 @@ export default function PromptDetailClient({
                     fontFamily: "inherit",
                   }}
                 >
-                  {prompt.result}
+                  {prompt.imageUrls && prompt.imageUrls.length > 0 && (
+                    <div style={{ marginBottom: prompt.result ? 16 : 0, display: "flex", flexDirection: "column", gap: 12 }}>
+                      {prompt.imageUrls.map((url, idx) => (
+                        <img 
+                          key={idx}
+                          src={url} 
+                          alt={`프롬프트 결과 이미지 ${idx + 1}`} 
+                          style={{ maxWidth: "100%", maxHeight: 500, borderRadius: 8, display: "block", objectFit: "contain" }} 
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {prompt.result && <div>{prompt.result}</div>}
                 </div>
               </div>
             )}
@@ -718,15 +732,8 @@ export default function PromptDetailClient({
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              position: "sticky",
-              top: 76,
-            }}
-          >
+          <div className="detail-sidebar">
+            <div className="detail-sidebar-sticky">
             <div
               style={{
                 background: "var(--surface)",
@@ -1036,5 +1043,7 @@ export default function PromptDetailClient({
         </div>
       )}
     </div>
+    </div>
+    </>
   );
 }

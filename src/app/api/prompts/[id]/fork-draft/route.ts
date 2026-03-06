@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
-import { promptsTable } from "@/lib/db/schema";
+import { promptsTable, promptImagesTable } from "@/lib/db/schema";
 import { getAuthUser, notFound } from "@/lib/http/auth-middleware";
 import { and, eq, inArray, ne } from "drizzle-orm";
 
@@ -42,6 +42,13 @@ export async function GET(
     .limit(1);
   if (!source) return notFound("프롬프트를 찾을 수 없습니다.");
 
+  const promptImages = await db
+    .select({ imageUrl: promptImagesTable.imageUrl })
+    .from(promptImagesTable)
+    .where(eq(promptImagesTable.promptId, promptId))
+    .orderBy(promptImagesTable.orderIndex);
+  const imageUrls = promptImages.map(img => img.imageUrl);
+
   let root = source;
   while (root.parentPromptId != null) {
     const [parent] = await db
@@ -66,6 +73,7 @@ export async function GET(
     description: source.description ?? "",
     categoryId: source.categoryId,
     result: source.result ?? "",
+    imageUrls,
     modelName: source.modelName ?? "",
   });
 }
