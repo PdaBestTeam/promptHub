@@ -136,7 +136,7 @@ function MypageContent() {
       <div
         style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 36px 80px" }}
       >
-        {/* Profile card */}
+       
         <div
           style={{
             background: "var(--surface)",
@@ -223,8 +223,7 @@ function MypageContent() {
             </div>
           </div>
         </div>
-
-        {/* Tabs */}
+ 
         <div
           style={{
             display: "flex",
@@ -278,7 +277,7 @@ function MypageContent() {
           ))}
         </div>
 
-        {/* Tab: My Prompts */}
+     
         {tab === "written" && (
           <div>
             <div
@@ -442,7 +441,7 @@ function MypageContent() {
           </div>
         )}
 
-        {/* Tab: Scraps */}
+ 
         {tab === "scraps" && (() => {
           const cats = Array.from(new Set(scraps.map((s) => s.category?.name).filter(Boolean))) as string[];
           const filtered = scrapCategory ? scraps.filter((s) => s.category?.name === scrapCategory) : scraps;
@@ -452,13 +451,13 @@ function MypageContent() {
                 <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)", fontSize: 14 }}>스크랩한 프롬프트가 없습니다.</div>
               ) : (
                 <>
-                  {/* 카테고리 필터 */}
+              
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                     {[{ label: `전체 ${scraps.length}`, value: null }, ...cats.map((c) => ({ label: `${c} ${scraps.filter((s) => s.category?.name === c).length}`, value: c }))].map(({ label, value }) => (
                       <button key={String(value)} onClick={() => setScrapCategory(value)} style={{ padding: "5px 14px", borderRadius: 20, border: "1px solid", fontSize: 12, cursor: "pointer", fontFamily: "inherit", transition: "all .15s", background: scrapCategory === value ? "var(--accent)" : "none", color: scrapCategory === value ? "#fff" : "var(--text-muted)", borderColor: scrapCategory === value ? "var(--accent)" : "var(--border)", fontWeight: scrapCategory === value ? 600 : 400 }}>{label}</button>
                     ))}
                   </div>
-                  {/* 목록 */}
+         
                   {filtered.length === 0 ? (
                     <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)", fontSize: 14 }}>해당 카테고리에 스크랩한 프롬프트가 없습니다.</div>
                   ) : filtered.map((s) => (
@@ -492,8 +491,7 @@ function MypageContent() {
             </div>
           );
         })()}
-
-        {/* Tab: Profile */}
+ 
         {tab === "profile" && (
           <div style={{ maxWidth: 600 }}>
             <form onSubmit={handleProfileSave}>
@@ -520,7 +518,7 @@ function MypageContent() {
                 >
                   프로필 수정
                 </div>
-                {/* Avatar preview */}
+                
                 <div
                   style={{
                     display: "flex",

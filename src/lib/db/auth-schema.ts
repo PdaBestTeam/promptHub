@@ -1,5 +1,3 @@
-// Better Auth DB schema (user, session, account, verification)
-// This is separate from the promptHub schema (prompts, categories, etc.)
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 

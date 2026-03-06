@@ -15,21 +15,14 @@ import {
 
 const appSchema = pgSchema("promptHub");
 
-// Compatibility alias for existing API/query code.
 export const usersTable = authSchema.user;
 
-// ══════════════════════════════════════════════════════
-// CATEGORIES  (4 fixed: 일러스트, 개발, 고민해결, 여행)
-// ══════════════════════════════════════════════════════
 export const categoriesTable = appSchema.table("categories", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
 });
 
-// ══════════════════════════════════════════════════════
-// PROMPTS
-// ══════════════════════════════════════════════════════
 export const promptsTable = appSchema.table(
   "prompts",
   {
@@ -46,15 +39,15 @@ export const promptsTable = appSchema.table(
     result: text("result"),
     modelName: varchar("model_name", { length: 200 }),
     isPublic: boolean("is_public").notNull().default(true),
-    // Fork relations
+
     parentPromptId: integer("parent_prompt_id").references(
       (): AnyPgColumn => promptsTable.id,
       { onDelete: "set null" },
     ),
     forkedFromVersionId: integer("forked_from_version_id"),
-    // Version tracking
+
     currentVersionNo: integer("current_version_no").notNull().default(1),
-    // Stats (denormalized for perf)
+
     viewCount: integer("view_count").notNull().default(0),
     scrapCount: integer("scrap_count").notNull().default(0),
     forkCount: integer("fork_count").notNull().default(0),
@@ -72,9 +65,6 @@ export const promptsTable = appSchema.table(
   ],
 );
 
-// ══════════════════════════════════════════════════════
-// PROMPT_VERSIONS
-// ══════════════════════════════════════════════════════
 export const promptVersionsTable = appSchema.table(
   "prompt_versions",
   {
@@ -94,9 +84,6 @@ export const promptVersionsTable = appSchema.table(
   (table) => [index("prompt_versions_prompt_id_idx").on(table.promptId)],
 );
 
-// ══════════════════════════════════════════════════════
-// SCRAPS
-// ══════════════════════════════════════════════════════
 export const scrapsTable = appSchema.table(
   "scraps",
   {

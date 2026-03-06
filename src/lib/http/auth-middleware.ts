@@ -4,10 +4,7 @@ import { auth } from "../auth";
 export async function getAuthUser(
   request: NextRequest,
 ): Promise<{ userId: string } | null> {
-  // better-auth는 request를 받아 세션 확인하는 API가 있음.
-
   const session = await auth.api.getSession({ headers: request.headers });
-  // const session = await auth.getSession({ headers: request.headers });
 
   const id = session?.user?.id;
   if (!id) return null;

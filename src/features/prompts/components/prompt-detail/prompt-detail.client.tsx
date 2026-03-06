@@ -1,6 +1,5 @@
 "use client";
 // src/features/prompts/components/prompt-detail/prompt-detail.client.tsx
-// Client Component: 스크랩·Fork·버전선택·복사 인터랙션 담당
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -52,7 +51,6 @@ export default function PromptDetailClient({
   const { user, authFetch, loading: authLoading } = useAuth();
 
   const [prompt, setPrompt] = useState<PromptDetailData>(() => {
-    // 목록에서 넘어올 때 저장해 둔 스크랩 상태가 있으면 즉시 반영
     if (typeof window === "undefined") return initialPrompt;
     const saved = sessionStorage.getItem(`prompt-scrap-${initialPrompt.id}`);
     if (saved !== null) {
@@ -67,7 +65,6 @@ export default function PromptDetailClient({
     return initialPrompt;
   });
 
-  // 목록에서 클릭 시 → fork 트리의 최신 버전으로 자동 이동
   useEffect(() => {
     if (typeof window === "undefined" || versions.length === 0) return;
     const gotoLatest = sessionStorage.getItem("prompt-goto-latest");
@@ -82,7 +79,6 @@ export default function PromptDetailClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 서버에서는 토큰 접근 불가 → 클라이언트 인증 완료 후 스크랩 상태 동기화 (id 바뀔 때마다 재조회, 조회수 미증가)
   useEffect(() => {
     if (authLoading || !user) return;
     authFetch(`/api/prompts/${initialPrompt.id}`, {
@@ -93,7 +89,10 @@ export default function PromptDetailClient({
         if (data.isScrapped !== undefined || data.result !== undefined) {
           setPrompt((p) => ({
             ...p,
-            ...(data.isScrapped !== undefined && { isScrapped: data.isScrapped, scrapCount: data.scrapCount }),
+            ...(data.isScrapped !== undefined && {
+              isScrapped: data.isScrapped,
+              scrapCount: data.scrapCount,
+            }),
             ...(data.result !== undefined && { result: data.result ?? null }),
           }));
         }
@@ -106,11 +105,17 @@ export default function PromptDetailClient({
     return match ?? versions[versions.length - 1] ?? null;
   });
   const selectedVerRef = useRef<Version | null>(selectedVer);
-  useEffect(() => { selectedVerRef.current = selectedVer; }, [selectedVer]);
-  const [prevPromptId, setPrevPromptId] = useState<string | number>(initialPrompt.id);
+  useEffect(() => {
+    selectedVerRef.current = selectedVer;
+  }, [selectedVer]);
+  const [prevPromptId, setPrevPromptId] = useState<string | number>(
+    initialPrompt.id,
+  );
   if (prevPromptId !== initialPrompt.id) {
     setPrevPromptId(initialPrompt.id);
-    const match = versions.find((v) => Number(v.id) === Number(initialPrompt.id));
+    const match = versions.find(
+      (v) => Number(v.id) === Number(initialPrompt.id),
+    );
     setSelectedVer(match ?? versions[versions.length - 1] ?? null);
   }
   function selectVersion(v: Version) {
@@ -154,8 +159,18 @@ export default function PromptDetailClient({
       value: displayStats.viewCount,
       icon: Binoculars,
     },
-    { key: "scraps", label: "스크랩", value: displayStats.scrapCount, icon: Heart },
-    { key: "forks", label: "Fork", value: displayStats.forkCount, icon: GitFork },
+    {
+      key: "scraps",
+      label: "스크랩",
+      value: displayStats.scrapCount,
+      icon: Heart,
+    },
+    {
+      key: "forks",
+      label: "Fork",
+      value: displayStats.forkCount,
+      icon: GitFork,
+    },
     {
       key: "version",
       label: "버전",
@@ -221,7 +236,6 @@ export default function PromptDetailClient({
       <div
         style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 36px 80px" }}
       >
-        {/* Breadcrumb */}
         <div
           style={{
             display: "flex",
@@ -259,9 +273,7 @@ export default function PromptDetailClient({
             alignItems: "start",
           }}
         >
-          {/* Main */}
           <div style={{ minWidth: 0 }}>
-            {/* Meta */}
             <div
               style={{
                 display: "flex",
@@ -272,10 +284,17 @@ export default function PromptDetailClient({
               }}
             >
               {prompt.parentPromptId && (
-                <span className="badge badge-fork" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <GitFork size={12} />
-                Fork
-              </span>
+                <span
+                  className="badge badge-fork"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <GitFork size={12} />
+                  Fork
+                </span>
               )}
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 {new Date(prompt.createdAt).toLocaleDateString("ko-KR")}
@@ -308,7 +327,6 @@ export default function PromptDetailClient({
               </p>
             )}
 
-            {/* Actions */}
             <div
               style={{
                 display: "flex",
@@ -322,9 +340,9 @@ export default function PromptDetailClient({
                   const src = selectedVerRef.current ?? selectedVer;
                   const base = (src?.title ?? prompt.title).replace(
                     /\s*\(Fork v\d+\)$/,
-                    ""
+                    "",
                   );
-                  // API 먼저 호출해서 실제 버전 번호 포함된 제목 받기
+
                   setFetchingForkDraft(true);
                   authFetch(`/api/prompts/${id}/fork`, {
                     method: "POST",
@@ -398,7 +416,6 @@ export default function PromptDetailClient({
               )}
             </div>
 
-            {/* Version selector */}
             {versions.length > 0 && (
               <div
                 style={{
@@ -449,7 +466,6 @@ export default function PromptDetailClient({
               </div>
             )}
 
-            {/* Content */}
             <div
               style={{
                 background: "var(--surface)",
@@ -514,19 +530,50 @@ export default function PromptDetailClient({
               </div>
             </div>
 
-            {/* 프롬프트 결과 (result 있을 때만) */}
             {prompt.result && (
-              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
-                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "var(--text-muted)" }}>✨ 프롬프트 결과</span>
+              <div
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    borderBottom: "1px solid var(--border)",
+                    background: "var(--surface2)",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: ".8px",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    ✨ 프롬프트 결과
+                  </span>
                 </div>
-                <div style={{ padding: 20, fontSize: 13, lineHeight: 1.85, color: "var(--text-dim)", whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                <div
+                  style={{
+                    padding: 20,
+                    fontSize: 13,
+                    lineHeight: 1.85,
+                    color: "var(--text-dim)",
+                    whiteSpace: "pre-wrap",
+                    fontFamily: "inherit",
+                  }}
+                >
                   {prompt.result}
                 </div>
               </div>
             )}
 
-            {/* Tabs */}
             <div
               style={{
                 background: "var(--surface)",
@@ -565,14 +612,24 @@ export default function PromptDetailClient({
                       marginBottom: -1,
                     }}
                   >
-                    {tab === "versions"
-                      ? `📋 버전 히스토리 (${versions.length})`
-                      : (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <GitFork size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
-                          Fork 목록 ({prompt.forkCount})
-                        </span>
-                      )}
+                    {tab === "versions" ? (
+                      `📋 버전 히스토리 (${versions.length})`
+                    ) : (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <GitFork
+                          size={16}
+                          strokeWidth={2}
+                          style={{ flexShrink: 0 }}
+                        />
+                        Fork 목록 ({prompt.forkCount})
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -661,7 +718,6 @@ export default function PromptDetailClient({
             </div>
           </div>
 
-          {/* Sidebar */}
           <div
             style={{
               display: "flex",
@@ -778,7 +834,6 @@ export default function PromptDetailClient({
         </div>
       </div>
 
-      {/* Delete Modal */}
       {showDeleteModal && (
         <div
           style={{
@@ -845,7 +900,6 @@ export default function PromptDetailClient({
         </div>
       )}
 
-      {/* Fork Modal */}
       {showForkModal && (
         <div
           style={{
@@ -965,7 +1019,17 @@ export default function PromptDetailClient({
                 onClick={handleFork}
                 disabled={forking}
               >
-                {forking ? "Fork 중..." : <><GitFork size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />Fork 생성</>}
+                {forking ? (
+                  "Fork 중..."
+                ) : (
+                  <>
+                    <GitFork
+                      size={14}
+                      style={{ verticalAlign: "middle", marginRight: 4 }}
+                    />
+                    Fork 생성
+                  </>
+                )}
               </button>
             </div>
           </div>

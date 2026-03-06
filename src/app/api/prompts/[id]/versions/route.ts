@@ -1,16 +1,12 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
-import {
-  promptsTable,
-  promptVersionsTable,
-  usersTable,
-} from "@/lib/db/schema";
+import { promptsTable, promptVersionsTable, usersTable } from "@/lib/db/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 
 // GET /api/prompts/:id/versions — 루트부터 현재까지 포크 트리 전체를 v1, v2, … 로 반환
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const promptId = Number(id);
@@ -22,7 +18,6 @@ export async function GET(
     .limit(1);
   if (!current) return Response.json({ data: [] });
 
-  // 루트 찾기
   let root = current;
   while (root.parentPromptId != null) {
     const [parent] = await db
@@ -34,7 +29,6 @@ export async function GET(
     root = parent;
   }
 
-  // 트리 내 모든 프롬프트 ID 수집 (루트 + 모든 자식)
   const treeIds = new Set<number>([root.id]);
   let levelIds: number[] = [root.id];
   while (levelIds.length > 0) {
@@ -77,7 +71,6 @@ export async function GET(
 
   const userMap = new Map(users.map((u) => [u.id, u]));
 
-  // 각 프롬프트의 현재 버전에 해당하는 prompt_versions 행에서 change_note(버전 메모) 조회
   const versionNotes = await db
     .select({
       promptId: promptVersionsTable.promptId,
@@ -88,12 +81,12 @@ export async function GET(
     .where(
       inArray(
         promptVersionsTable.promptId,
-        rows.map((r) => r.id)
-      )
+        rows.map((r) => r.id),
+      ),
     );
 
   const noteMap = new Map(
-    versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote])
+    versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote]),
   );
 
   const seenIds = new Set<number>();
@@ -105,8 +98,7 @@ export async function GET(
     })
     .map((r) => {
       const memo = noteMap.get(`${r.id}-${r.versionNo}`);
-      const defaultNote =
-        r.versionNo === 1 ? "원본" : `Fork v${r.versionNo}`;
+      const defaultNote = r.versionNo === 1 ? "원본" : `Fork v${r.versionNo}`;
       return {
         id: r.id,
         versionNo: r.versionNo,

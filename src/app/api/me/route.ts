@@ -23,14 +23,12 @@ export async function GET(request: NextRequest) {
 
   if (!user) return unauthorized();
 
-  // Prompt count (실제 존재하는 프롬프트 행 수, bigint → number 보장)
   const [promptRow] = await db
     .select({ promptCount: count() })
     .from(promptsTable)
     .where(eq(promptsTable.authorId, auth.userId));
   const promptCount = Number(promptRow?.promptCount ?? 0);
 
-  // Scrap count
   const [scrapRow] = await db
     .select({ scrapCount: count() })
     .from(scrapsTable)

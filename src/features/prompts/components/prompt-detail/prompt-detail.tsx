@@ -1,5 +1,4 @@
 // src/features/prompts/components/prompt-detail/prompt-detail.tsx
-// Server Component: DB 직접 조회 후 Client에 전달
 
 import PromptDetailClient from "./prompt-detail.client";
 import { notFound } from "next/navigation";
@@ -50,21 +49,21 @@ export default async function PromptDetail({ id }: { id: string }) {
   if (!prompt) notFound();
   if (!prompt.isPublic) notFound();
 
-  // 조회수 증가
   await db
     .update(promptsTable)
     .set({ viewCount: sql`${promptsTable.viewCount} + 1` })
     .where(eq(promptsTable.id, promptId));
 
-  // ── 포크 트리 전체 버전 목록 조회 (main 브랜치와 동일한 방식) ──────────────
-  // 1. 루트 찾기
   let root: { id: number; parentPromptId: number | null } = {
     id: prompt.id,
     parentPromptId: prompt.parentPromptId as number | null,
   };
   while (root.parentPromptId != null) {
     const [parent] = await db
-      .select({ id: promptsTable.id, parentPromptId: promptsTable.parentPromptId })
+      .select({
+        id: promptsTable.id,
+        parentPromptId: promptsTable.parentPromptId,
+      })
       .from(promptsTable)
       .where(eq(promptsTable.id, root.parentPromptId))
       .limit(1);
@@ -72,7 +71,6 @@ export default async function PromptDetail({ id }: { id: string }) {
     root = parent;
   }
 
-  // 2. 트리 내 모든 프롬프트 ID 수집
   const treeIds = new Set<number>([root.id]);
   let levelIds: number[] = [root.id];
   while (levelIds.length > 0) {
@@ -85,7 +83,6 @@ export default async function PromptDetail({ id }: { id: string }) {
     levelIds = newIds;
   }
 
-  // 3. 트리 노드를 버전으로 조회
   const ids = Array.from(treeIds);
   const rows = await db
     .select({
@@ -100,7 +97,6 @@ export default async function PromptDetail({ id }: { id: string }) {
     .where(inArray(promptsTable.id, ids))
     .orderBy(asc(promptsTable.currentVersionNo));
 
-  // 4. 작성자 정보
   const userIds = [...new Set(rows.map((r) => r.authorId))];
   const users =
     userIds.length === 0
@@ -111,7 +107,6 @@ export default async function PromptDetail({ id }: { id: string }) {
           .where(inArray(usersTable.id, userIds));
   const userMap = new Map(users.map((u) => [u.id, u]));
 
-  // 5. changeNote 조회
   const versionNotes = await db
     .select({
       promptId: promptVersionsTable.promptId,
@@ -119,9 +114,14 @@ export default async function PromptDetail({ id }: { id: string }) {
       changeNote: promptVersionsTable.changeNote,
     })
     .from(promptVersionsTable)
-    .where(inArray(promptVersionsTable.promptId, rows.map((r) => r.id)));
+    .where(
+      inArray(
+        promptVersionsTable.promptId,
+        rows.map((r) => r.id),
+      ),
+    );
   const noteMap = new Map(
-    versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote])
+    versionNotes.map((v) => [`${v.promptId}-${v.versionNo}`, v.changeNote]),
   );
 
   const versions = rows.map((r) => {
@@ -133,7 +133,10 @@ export default async function PromptDetail({ id }: { id: string }) {
       title: r.title,
       content: r.content,
       changeNote: memo ?? defaultNote,
-      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+      createdAt:
+        r.createdAt instanceof Date
+          ? r.createdAt.toISOString()
+          : String(r.createdAt),
       editor: {
         id: userMap.get(r.authorId)?.id ?? r.authorId,
         nickname: userMap.get(r.authorId)?.name ?? "",
@@ -154,8 +157,12 @@ export default async function PromptDetail({ id }: { id: string }) {
         viewCount: prompt.viewCount,
         scrapCount: prompt.scrapCount,
         forkCount: prompt.forkCount,
-        parentPromptId: prompt.parentPromptId != null ? String(prompt.parentPromptId) : null,
-        createdAt: prompt.createdAt instanceof Date ? prompt.createdAt.toISOString() : String(prompt.createdAt),
+        parentPromptId:
+          prompt.parentPromptId != null ? String(prompt.parentPromptId) : null,
+        createdAt:
+          prompt.createdAt instanceof Date
+            ? prompt.createdAt.toISOString()
+            : String(prompt.createdAt),
         isScrapped: false,
         category: prompt.category,
         author: prompt.author,

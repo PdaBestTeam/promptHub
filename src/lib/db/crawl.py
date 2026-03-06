@@ -65,13 +65,11 @@ HEADERS = {
 }
 
 
-# ─────────────────────────────────────────────
-# DB 초기화
-# ─────────────────────────────────────────────
+
 def setup_db(conn) -> dict:
     cur = conn.cursor()
 
-    # model_name 컬럼이 없으면 추가
+ 
     cur.execute("""
         ALTER TABLE "promptHub".prompts
         ADD COLUMN IF NOT EXISTS model_name varchar(200)

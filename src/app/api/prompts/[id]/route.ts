@@ -13,7 +13,7 @@ import { and, eq, inArray, ne, sql } from "drizzle-orm";
 // GET /api/prompts/:id
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const promptId = Number(id);
@@ -58,7 +58,6 @@ export async function GET(
     return forbidden();
   }
 
-  // 조회수 증가: 클라이언트의 스크랩/결과 동기화 요청(X-Skip-View-Count)이 아닐 때만 (서버 초기 로드 1회만 카운트)
   const skipViewCount = request.headers.get("X-Skip-View-Count") === "true";
   if (!skipViewCount) {
     await db
@@ -67,24 +66,31 @@ export async function GET(
       .where(eq(promptsTable.id, promptId));
   }
 
-  // Check if user scrapped this
   let isScrapped = false;
   if (auth) {
     const [scrap] = await db
       .select({ userId: scrapsTable.userId })
       .from(scrapsTable)
       .where(
-        and(eq(scrapsTable.userId, auth.userId), eq(scrapsTable.promptId, promptId))
+        and(
+          eq(scrapsTable.userId, auth.userId),
+          eq(scrapsTable.promptId, promptId),
+        ),
       )
       .limit(1);
     isScrapped = !!scrap;
   }
 
-  // 다음 Fork 버전 = 트리 전체 노드 수 + 1 (v1,v2,v3 있으면 다음 포크는 v4)
-  let root = { id: prompt.id, parentPromptId: prompt.parentPromptId as number | null };
+  let root = {
+    id: prompt.id,
+    parentPromptId: prompt.parentPromptId as number | null,
+  };
   while (root.parentPromptId != null) {
     const [parent] = await db
-      .select({ id: promptsTable.id, parentPromptId: promptsTable.parentPromptId })
+      .select({
+        id: promptsTable.id,
+        parentPromptId: promptsTable.parentPromptId,
+      })
       .from(promptsTable)
       .where(eq(promptsTable.id, root.parentPromptId))
       .limit(1);
@@ -98,20 +104,26 @@ export async function GET(
     const children = await db
       .select({ id: promptsTable.id })
       .from(promptsTable)
-      .where(and(inArray(promptsTable.parentPromptId, levelIds), ne(promptsTable.id, rootId)));
+      .where(
+        and(
+          inArray(promptsTable.parentPromptId, levelIds),
+          ne(promptsTable.id, rootId),
+        ),
+      );
     const newIds = children.map((c) => c.id).filter((id) => !treeIds.has(id));
     newIds.forEach((id) => treeIds.add(id));
     levelIds = newIds;
   }
   const nextForkVersionNo = treeIds.size + 1;
 
-  // 저장 시 v? 표시: 실제로 한 번이라도 저장(수정)한 적이 있으면 currentVersionNo+1, 아니면 현재와 동일
   const [{ count: versionRecordCount }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(promptVersionsTable)
     .where(eq(promptVersionsTable.promptId, promptId));
   const nextVersionNoOnSave =
-    (versionRecordCount ?? 0) > 1 ? prompt.currentVersionNo + 1 : prompt.currentVersionNo;
+    (versionRecordCount ?? 0) > 1
+      ? prompt.currentVersionNo + 1
+      : prompt.currentVersionNo;
 
   return Response.json({
     ...prompt,
@@ -124,7 +136,7 @@ export async function GET(
 // PATCH /api/prompts/:id
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const promptId = Number(id);
@@ -132,7 +144,10 @@ export async function PATCH(
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const [existing] = await db
-    .select({ authorId: promptsTable.authorId, currentVersionNo: promptsTable.currentVersionNo })
+    .select({
+      authorId: promptsTable.authorId,
+      currentVersionNo: promptsTable.currentVersionNo,
+    })
     .from(promptsTable)
     .where(eq(promptsTable.id, promptId))
     .limit(1);
@@ -140,8 +155,16 @@ export async function PATCH(
   if (!existing) return notFound("프롬프트를 찾을 수 없습니다.");
   if (existing.authorId !== auth.userId) return forbidden();
 
-  const { title, content, description, categoryId, isPublic, changeNote, result, modelName } =
-    await request.json();
+  const {
+    title,
+    content,
+    description,
+    categoryId,
+    isPublic,
+    changeNote,
+    result,
+    modelName,
+  } = await request.json();
 
   const newVersionNo = existing.currentVersionNo + 1;
 
@@ -160,7 +183,6 @@ export async function PATCH(
     .where(eq(promptsTable.id, promptId))
     .returning();
 
-  // Auto-create new version record
   await db.insert(promptVersionsTable).values({
     promptId: promptId,
     versionNo: newVersionNo,
@@ -176,7 +198,7 @@ export async function PATCH(
 // DELETE /api/prompts/:id
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const promptId = Number(id);

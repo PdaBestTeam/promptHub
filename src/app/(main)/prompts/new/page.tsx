@@ -200,7 +200,6 @@ function NewPromptContent() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Basic info */}
           <div
             style={{
               background: "var(--surface)",
@@ -371,7 +370,6 @@ function NewPromptContent() {
             </div>
           </div>
 
-          {/* Content */}
           <div
             style={{
               background: "var(--surface)",

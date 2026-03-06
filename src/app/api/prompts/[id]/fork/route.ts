@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db/client";
+import { promptsTable, promptVersionsTable } from "@/lib/db/schema";
 import {
-  promptsTable,
-  promptVersionsTable,
-} from "@/lib/db/schema";
-import { getAuthUser, unauthorized, notFound } from "@/lib/http/auth-middleware";
+  getAuthUser,
+  unauthorized,
+  notFound,
+} from "@/lib/http/auth-middleware";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 /** 루트 포함 트리 전체 노드 수. 다음 포크 버전 = nodeCount + 1 (v1,v2,v3 있으면 다음은 v4) */
@@ -18,8 +19,8 @@ async function getTreeNodeCount(rootId: number): Promise<number> {
       .where(
         and(
           inArray(promptsTable.parentPromptId, levelIds),
-          ne(promptsTable.id, rootId)
-        )
+          ne(promptsTable.id, rootId),
+        ),
       );
     const newIds = children.map((c) => c.id).filter((id) => !treeIds.has(id));
     newIds.forEach((id) => treeIds.add(id));
@@ -31,7 +32,7 @@ async function getTreeNodeCount(rootId: number): Promise<number> {
 // POST /api/prompts/:id/fork
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const promptId = Number(id);
@@ -62,7 +63,6 @@ export async function POST(
   const nextVersionNo = nodeCount + 1;
   const sourceVersionNo = source.currentVersionNo;
 
-  // 포크 초안만 반환: DB에 넣지 않음. 저장 시에만 생성됨.
   if (body.draftOnly === true) {
     const baseTitle = source.title.replace(/\s*\(Fork v\d+\)$/, "");
     const title = body.title ?? `${baseTitle} (Fork v${nextVersionNo})`;
@@ -78,13 +78,20 @@ export async function POST(
     });
   }
 
-  // 포크 초안에서 "저장"으로 실제 생성
   if (body.createFromDraft === true) {
-    const { title, content, description, categoryId, changeNote, result, modelName } = body;
+    const {
+      title,
+      content,
+      description,
+      categoryId,
+      changeNote,
+      result,
+      modelName,
+    } = body;
     if (!title?.trim() || !content?.trim()) {
       return Response.json(
         { error: "제목과 내용은 필수입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const forkVersionNo = (await getTreeNodeCount(rootId)) + 1;
@@ -122,7 +129,6 @@ export async function POST(
     return Response.json(forked, { status: 201 });
   }
 
-  // 레거시: 즉시 생성 (호환용)
   const baseTitle = source.title.replace(/\s*\(Fork v\d+\)$/, "");
   const title = body.title ?? `${baseTitle} (Fork v${nextVersionNo})`;
   const [forked] = await db

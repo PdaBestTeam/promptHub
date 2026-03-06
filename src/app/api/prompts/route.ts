@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
 
   const auth = await getAuthUser(request);
 
-  const conditions = [eq(promptsTable.isPublic, true), isNull(promptsTable.parentPromptId)];
+  const conditions = [
+    eq(promptsTable.isPublic, true),
+    isNull(promptsTable.parentPromptId),
+  ];
   if (q) conditions.push(ilike(promptsTable.title, `%${q}%`));
   if (category) conditions.push(eq(categoriesTable.slug, category));
 
@@ -44,7 +47,6 @@ export async function GET(request: NextRequest) {
           ? desc(promptsTable.forkCount)
           : desc(promptsTable.createdAt);
 
-  // 동일 조건 전체 건수 (총 N건 표시용)
   const [countRow] = await db
     .select({ total: count() })
     .from(promptsTable)
@@ -83,7 +85,6 @@ export async function GET(request: NextRequest) {
     .limit(limit)
     .offset(offset);
 
-  // If logged in, also return which ones the user scrapped
   let scrappedIds = new Set<number>();
   if (auth) {
     const userScraps = await db
@@ -104,8 +105,15 @@ export async function POST(request: NextRequest) {
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { title, content, description, categoryId, isPublic, result, modelName } =
-      await request.json();
+    const {
+      title,
+      content,
+      description,
+      categoryId,
+      isPublic,
+      result,
+      modelName,
+    } = await request.json();
 
     if (!title || !content) {
       return Response.json(
@@ -129,7 +137,6 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Auto-create v1
     await db.insert(promptVersionsTable).values({
       promptId: prompt.id,
       versionNo: 1,

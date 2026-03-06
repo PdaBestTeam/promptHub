@@ -30,7 +30,9 @@ const slides = [
 
 export default function OnboardingModal() {
   const router = useRouter();
-  const [visible, setVisible] = useState(() => !localStorage.getItem(STORAGE_KEY));
+  const [visible, setVisible] = useState(
+    () => !localStorage.getItem(STORAGE_KEY),
+  );
   const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
 
@@ -93,7 +95,6 @@ export default function OnboardingModal() {
             : "slideUp .3s ease forwards",
         }}
       >
-        {/* Hero area */}
         <div
           style={{
             background: s.color,
@@ -115,14 +116,17 @@ export default function OnboardingModal() {
             }}
           >
             {s.icon === "GitFork" ? (
-              <GitFork size={64} strokeWidth={2} style={{ color: "rgba(255,255,255,0.95)" }} />
+              <GitFork
+                size={64}
+                strokeWidth={2}
+                style={{ color: "rgba(255,255,255,0.95)" }}
+              />
             ) : (
               s.emoji
             )}
           </span>
         </div>
 
-        {/* Content */}
         <div style={{ padding: "28px 32px 32px" }}>
           <h2
             style={{
@@ -148,7 +152,6 @@ export default function OnboardingModal() {
             {s.desc}
           </p>
 
-          {/* Step dots */}
           <div
             style={{
               display: "flex",
@@ -175,7 +178,6 @@ export default function OnboardingModal() {
             ))}
           </div>
 
-          {/* Buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={handleGoAbout}

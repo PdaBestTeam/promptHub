@@ -1,6 +1,5 @@
 "use client";
 // src/features/prompts/components/prompt-list/prompt-list.client.tsx
-// Client Component: 검색·필터·스크랩 인터랙션 담당
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -40,12 +39,10 @@ interface Props {
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
-  // 기존
   illustration: "🎨",
   development: "💻",
   "problem-solving": "💬",
   travel: "✈️",
-  // 추가
   writing: "✏️",
   education: "📚",
   marketing: "📢",
@@ -56,7 +53,18 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   fun: "🎉",
   life: "🏠",
 };
-
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  illustration:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  development:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  "problem-solving":
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(236, 248, 246) 100%)",
+  travel:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+  default:
+    "linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)",
+};
 const CATEGORY_DESCS: Record<string, string> = {
   illustration: "이미지·그래픽",
   development: "코딩·기술",
@@ -81,7 +89,6 @@ const BG_COLORS: Record<string, string> = {
   default: "#f0eeeb",
 };
 
-// AI 유형별 배지: 투명한 파스텔 배경 + 카드와 어울리는 진한 텍스트
 const MODEL_BADGE_STYLES: Record<
   string,
   { bg: string; border: string; text: string }
@@ -201,7 +208,6 @@ export default function PromptListClient({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialPrompts.length === 12);
 
-  // 서버 컴포넌트가 새 props를 내려줄 때 (뒤로가기 후 URL 변경·refresh) 클라이언트 상태 동기화
   useEffect(() => {
     setQ(initialQ);
     setCategory(initialCategory);
@@ -240,7 +246,6 @@ export default function PromptListClient({
     [authFetch],
   );
 
-  // 상세 페이지에서 뒤로가기 시 authFetch로 재조회 (스크랩 상태 반영)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const fromDetail = sessionStorage.getItem("prompt-detail-from-list");
@@ -251,7 +256,6 @@ export default function PromptListClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPrompts]);
 
-  // 인증 완료 후 스크랩 상태 동기화 (최초 1회)
   useEffect(() => {
     if (authLoading || authSyncedRef.current) return;
     authSyncedRef.current = true;
@@ -266,7 +270,7 @@ export default function PromptListClient({
     setSort(newSort);
     setPage(1);
     fetchPrompts(newQ, newCat, newSort, 1, true);
-    // Next.js router.replace로 URL 동기화 → 뒤로가기 시 sort/category/q 복원
+
     const params = new URLSearchParams();
     if (newQ) params.set("q", newQ);
     if (newCat) params.set("category", newCat);
@@ -313,7 +317,6 @@ export default function PromptListClient({
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 36px" }}>
-      {/* Filters row */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <div style={{ flex: 1, position: "relative" }}>
           <svg
@@ -356,7 +359,6 @@ export default function PromptListClient({
         </select>
       </div>
 
-      {/* Category Cards — 우측 페이드로 스크롤 가능 암시 */}
       <div style={{ position: "relative", marginBottom: 24 }}>
         <div
           style={
@@ -474,7 +476,7 @@ export default function PromptListClient({
             );
           })}
         </div>
-        {/* 우측 그라데이션 페이드 — 더 스크롤 가능함을 암시 */}
+
         <div
           style={{
             position: "absolute",
@@ -494,7 +496,6 @@ export default function PromptListClient({
         총 <strong style={{ color: "var(--text)" }}>{totalCount}</strong>건
       </div>
 
-      {/* Cards grid */}
       {loading && prompts.length === 0 ? (
         <div
           style={{

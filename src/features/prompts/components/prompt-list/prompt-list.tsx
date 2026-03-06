@@ -1,6 +1,3 @@
-// src/features/prompts/components/prompt-list/prompt-list.tsx
-// Server Component: DB 직접 조회 후 Client Component에 전달
-
 import PromptListClient from "./prompt-list.client";
 import { db } from "@/lib/db/client";
 import { promptsTable, categoriesTable } from "@/lib/db/schema";
@@ -18,7 +15,6 @@ export default async function PromptList({
   category = "",
   sort = "latest",
 }: SearchProps) {
-  // category slug 변환
   const resolvedCategory =
     category === "dev"
       ? "development"
@@ -46,7 +42,6 @@ export default async function PromptList({
   if (resolvedCategory)
     conditions.push(eq(categoriesTable.slug, resolvedCategory));
 
-  // 전체 건수
   const [countRow] = await db
     .select({ total: count() })
     .from(promptsTable)
@@ -54,7 +49,6 @@ export default async function PromptList({
     .where(and(...conditions));
   const total = Number(countRow?.total ?? 0);
 
-  // 프롬프트 목록
   const rows = await db
     .select({
       id: promptsTable.id,
@@ -86,7 +80,6 @@ export default async function PromptList({
     .limit(limit)
     .offset(offset);
 
-  // 카테고리 목록
   const categories = await db
     .select()
     .from(categoriesTable)

@@ -48,7 +48,6 @@ export default function AppHeader() {
         }
       `}</style>
 
-      {/* Logo */}
       <Link
         href="/"
         style={{
@@ -67,7 +66,6 @@ export default function AppHeader() {
 
       <div />
 
-      {/* Right side */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
           className="btn-ghost"
@@ -81,7 +79,6 @@ export default function AppHeader() {
           <>
             <GenerativeAIModal />
 
-            {/* 프롬프트 등록 — 아주 좁은 화면에서 텍스트 숨기고 "+" 만 표시 */}
             <button
               className="btn-primary nav-prompt-btn"
               onClick={() => router.push("/prompts/new")}
@@ -90,7 +87,6 @@ export default function AppHeader() {
               +<span className="nav-btn-text"> 프롬프트 등록</span>
             </button>
 
-            {/* 유저 아바타 + 닉네임 — 좁은 화면에서 닉네임 텍스트 숨김 */}
             <div
               onClick={() => router.push("/mypage")}
               style={{
@@ -143,7 +139,6 @@ export default function AppHeader() {
               </span>
             </div>
 
-            {/* 로그아웃 — 좁은 화면에서 숨김 (마이페이지에서 가능) */}
             <button
               className="btn-ghost nav-hide-md"
               onClick={handleLogout}

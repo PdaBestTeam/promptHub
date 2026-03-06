@@ -21,7 +21,6 @@ export default function AboutPage() {
     <main
       style={{ paddingTop: 60, background: "var(--bg)", overflow: "hidden" }}
     >
-      {/* 반응형 오버라이드만 담당 — 기본 스타일은 모두 인라인 style={{}} */}
       <style>{`
         @media (max-width: 860px) {
           .about-hero    { padding: 50px 24px 40px !important; min-height: 70vh !important; }
@@ -53,7 +52,6 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* ── HERO ── */}
       <section
         className="about-hero"
         style={{
@@ -67,7 +65,6 @@ export default function AboutPage() {
           margin: "0 auto",
         }}
       >
-        {/* background orbs */}
         <div
           style={{
             position: "absolute",
@@ -152,7 +149,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── WHY ── */}
       <section
         className="about-section"
         style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
@@ -168,7 +164,6 @@ export default function AboutPage() {
             alignItems: "center",
           }}
         >
-          {/* left */}
           <div>
             <div
               style={{
@@ -241,7 +236,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* right — version evolution */}
           <div>
             <div
               style={{
@@ -266,7 +260,6 @@ export default function AboutPage() {
                     alignItems: "stretch",
                   }}
                 >
-                  {/* connector */}
                   {i < versions.length - 1 && (
                     <div
                       style={{
@@ -372,7 +365,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
       <section
         className="about-section"
         style={{ padding: "100px 36px", borderTop: "1px solid var(--border)" }}
@@ -427,7 +419,6 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* bento grid */}
           <div
             className="about-features-grid"
             style={{
@@ -437,7 +428,6 @@ export default function AboutPage() {
               gap: 14,
             }}
           >
-            {/* Fork — tall, spans 2 rows */}
             <div
               className="about-fork-card"
               style={{
@@ -508,7 +498,6 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* 버전 히스토리 */}
             <div
               style={{
                 padding: "28px 24px",
@@ -541,7 +530,6 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* 카테고리 탐색 */}
             <div
               style={{
                 padding: "28px 24px",
@@ -574,7 +562,6 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* 스크랩 */}
             <div
               style={{
                 padding: "28px 24px",
@@ -608,7 +595,6 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* 직접 등록 */}
             <div
               style={{
                 padding: "28px 24px",
@@ -645,7 +631,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── GOAL ── */}
       <section
         className="about-goal"
         style={{
@@ -713,9 +698,8 @@ export default function AboutPage() {
               margin: "0 auto",
             }}
           >
-            PromptHub는 단순한 저장 공간이 아닙니다.
-            사용자들의 프롬프트가 서로에게 영감을 주고,
-            Fork와 수정을 통해 더 좋은 프롬프트로 진화하는
+            PromptHub는 단순한 저장 공간이 아닙니다. 사용자들의 프롬프트가
+            서로에게 영감을 주고, Fork와 수정을 통해 더 좋은 프롬프트로 진화하는
             협업 생태계를 목표로 합니다.
           </p>
         </div>

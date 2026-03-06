@@ -475,7 +475,6 @@ export default function EditPromptPage() {
             </div>
           </div>
 
-          {/* Danger zone */}
           <div
             style={{
               background: "var(--red-dim)",
@@ -556,7 +555,6 @@ export default function EditPromptPage() {
         </form>
       </div>
 
-      {/* Delete Modal */}
       {showDeleteModal && (
         <div
           style={{
