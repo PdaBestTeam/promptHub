@@ -149,12 +149,17 @@ export default function AppHeader() {
           </>
         ) : (
           <>
-            <button className="btn-ghost" onClick={() => router.push("/login")}>
+            <button
+              className="btn-ghost"
+              onClick={() => router.push("/login")}
+              style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+            >
               로그인
             </button>
             <button
               className="btn-primary"
               onClick={() => router.push("/signup")}
+              style={{ whiteSpace: "nowrap", flexShrink: 0 }}
             >
               회원가입
             </button>

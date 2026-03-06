@@ -261,3 +261,38 @@ body {
 .badge-public { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
 .badge-private { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
 .badge-fork { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(196,114,216,0.28); }
+
+.detail-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 28px;
+  align-items: start;
+}
+
+.detail-sidebar-sticky {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 76px;
+}
+
+@media (max-width: 860px) {
+  .detail-layout-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .detail-main-content {
+    order: 2;
+  }
+  .detail-sidebar {
+    order: 1;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .detail-sidebar-sticky {
+    position: static;
+    top: auto;
+  }
+}
