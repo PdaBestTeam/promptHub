@@ -3,7 +3,7 @@
 
 import PromptListClient from "./prompt-list.client";
 import { db } from "@/lib/db/client";
-import { promptsTable, categoriesTable, scrapsTable } from "@/lib/db/schema";
+import { promptsTable, categoriesTable } from "@/lib/db/schema";
 import * as authSchema from "@/lib/db/auth-schema";
 import { and, desc, eq, ilike, count, isNull } from "drizzle-orm";
 
@@ -43,7 +43,8 @@ export default async function PromptList({
     isNull(promptsTable.parentPromptId),
   ];
   if (q) conditions.push(ilike(promptsTable.title, `%${q}%`));
-  if (resolvedCategory) conditions.push(eq(categoriesTable.slug, resolvedCategory));
+  if (resolvedCategory)
+    conditions.push(eq(categoriesTable.slug, resolvedCategory));
 
   // 전체 건수
   const [countRow] = await db
@@ -95,7 +96,10 @@ export default async function PromptList({
     ...r,
     id: String(r.id),
     parentPromptId: r.parentPromptId != null ? String(r.parentPromptId) : null,
-    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    createdAt:
+      r.createdAt instanceof Date
+        ? r.createdAt.toISOString()
+        : String(r.createdAt),
     isScrapped: false,
   }));
 
