@@ -8,11 +8,16 @@ import {
   categoriesTable,
   usersTable,
   promptVersionsTable,
+  scrapsTable,
 } from "@/lib/db/schema";
-import { eq, asc, sql, inArray } from "drizzle-orm";
+import { and, eq, asc, sql, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function PromptDetail({ id }: { id: string }) {
   const promptId = Number(id);
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id ?? null;
 
   const [prompt] = await db
     .select({
@@ -48,6 +53,16 @@ export default async function PromptDetail({ id }: { id: string }) {
 
   if (!prompt) notFound();
   if (!prompt.isPublic) notFound();
+
+  let isScrapped = false;
+  if (userId) {
+    const [scrap] = await db
+      .select({ userId: scrapsTable.userId })
+      .from(scrapsTable)
+      .where(and(eq(scrapsTable.userId, userId), eq(scrapsTable.promptId, promptId)))
+      .limit(1);
+    isScrapped = !!scrap;
+  }
 
   await db
     .update(promptsTable)
@@ -163,7 +178,7 @@ export default async function PromptDetail({ id }: { id: string }) {
           prompt.createdAt instanceof Date
             ? prompt.createdAt.toISOString()
             : String(prompt.createdAt),
-        isScrapped: false,
+        isScrapped: isScrapped,
         category: prompt.category,
         author: prompt.author,
       }}

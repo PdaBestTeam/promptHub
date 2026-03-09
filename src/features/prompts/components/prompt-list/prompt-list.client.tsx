@@ -247,14 +247,30 @@ export default function PromptListClient({
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const fromDetail = sessionStorage.getItem("prompt-detail-from-list");
-    if (fromDetail) {
-      sessionStorage.removeItem("prompt-detail-from-list");
-      fetchPrompts(q, category, sort, 1, true);
-    }
+    if (!user) return;
+
+    const syncScrapIds = () => {
+      authFetch("/api/me/scrap-ids")
+        .then((r) => r.json())
+        .then((data) => {
+          const scrappedSet = new Set<string>((data.ids ?? []).map(String));
+          setPrompts((prev) =>
+            prev.map((p) => ({ ...p, isScrapped: scrappedSet.has(String(p.id)) }))
+          );
+        })
+        .catch(() => {});
+    };
+
+    const handlePopState = () => {
+      syncScrapIds();
+      router.refresh();
+    };
+
+    syncScrapIds();
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchPrompts]);
+  }, [user]);
 
   useEffect(() => {
     if (authLoading || authSyncedRef.current) return;
@@ -294,12 +310,6 @@ export default function PromptListClient({
     const newIsScrapped = !prompt.isScrapped;
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${prompt.id}/scrap`, { method });
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(
-        `prompt-scrap-${prompt.id}`,
-        String(newIsScrapped),
-      );
-    }
     setPrompts((prev) =>
       prev.map((p) =>
         p.id === prompt.id
@@ -547,12 +557,7 @@ export default function PromptListClient({
                 }}
                 onClick={() => {
                   if (typeof window !== "undefined") {
-                    sessionStorage.setItem("prompt-detail-from-list", "1");
                     sessionStorage.setItem("prompt-goto-latest", "1");
-                    sessionStorage.setItem(
-                      `prompt-scrap-${prompt.id}`,
-                      String(prompt.isScrapped),
-                    );
                   }
                   router.push(`/prompts/${prompt.id}`);
                 }}

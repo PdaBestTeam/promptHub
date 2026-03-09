@@ -1,8 +1,10 @@
 import PromptListClient from "./prompt-list.client";
 import { db } from "@/lib/db/client";
-import { promptsTable, categoriesTable } from "@/lib/db/schema";
+import { promptsTable, categoriesTable, scrapsTable } from "@/lib/db/schema";
 import * as authSchema from "@/lib/db/auth-schema";
 import { and, desc, eq, ilike, count, isNull } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 interface SearchProps {
   q?: string;
@@ -15,6 +17,8 @@ export default async function PromptList({
   category = "",
   sort = "latest",
 }: SearchProps) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id ?? null;
   const resolvedCategory =
     category === "dev"
       ? "development"
@@ -85,6 +89,15 @@ export default async function PromptList({
     .from(categoriesTable)
     .orderBy(categoriesTable.id);
 
+  let scrappedIds = new Set<number>();
+  if (userId) {
+    const userScraps = await db
+      .select({ promptId: scrapsTable.promptId })
+      .from(scrapsTable)
+      .where(eq(scrapsTable.userId, userId));
+    scrappedIds = new Set(userScraps.map((s) => s.promptId));
+  }
+
   const data = rows.map((r) => ({
     ...r,
     id: String(r.id),
@@ -93,7 +106,7 @@ export default async function PromptList({
       r.createdAt instanceof Date
         ? r.createdAt.toISOString()
         : String(r.createdAt),
-    isScrapped: false,
+    isScrapped: scrappedIds.has(r.id),
   }));
 
   return (

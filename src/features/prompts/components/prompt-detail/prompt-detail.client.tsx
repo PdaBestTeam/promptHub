@@ -52,20 +52,7 @@ export default function PromptDetailClient({
   const router = useRouter();
   const { user, authFetch, loading: authLoading } = useAuth();
 
-  const [prompt, setPrompt] = useState<PromptDetailData>(() => {
-    if (typeof window === "undefined") return initialPrompt;
-    const saved = sessionStorage.getItem(`prompt-scrap-${initialPrompt.id}`);
-    if (saved !== null) {
-      const isScrapped = saved === "true";
-      const delta = (isScrapped ? 1 : 0) - (initialPrompt.isScrapped ? 1 : 0);
-      return {
-        ...initialPrompt,
-        isScrapped,
-        scrapCount: Math.max(0, initialPrompt.scrapCount + delta),
-      };
-    }
-    return initialPrompt;
-  });
+  const [prompt, setPrompt] = useState<PromptDetailData>(initialPrompt);
 
   useEffect(() => {
     if (typeof window === "undefined" || versions.length === 0) return;
@@ -194,9 +181,6 @@ export default function PromptDetailClient({
     const newIsScrapped = !prompt.isScrapped;
     const method = prompt.isScrapped ? "DELETE" : "POST";
     await authFetch(`/api/prompts/${id}/scrap`, { method });
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(`prompt-scrap-${id}`, String(newIsScrapped));
-    }
     setPrompt((p) => ({
       ...p,
       isScrapped: newIsScrapped,
